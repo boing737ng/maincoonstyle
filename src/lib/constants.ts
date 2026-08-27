@@ -13,6 +13,4 @@ export function getSiteData() {
   return siteData;
 }
 
-export const MAX_PHOTOS_PER_ANIMAL = 5;
-export const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB
-export const ALLOWED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export { ALLOWED_PHOTO_TYPES, MAX_PHOTO_BYTES, MAX_PHOTOS_PER_ANIMAL } from "./shared";

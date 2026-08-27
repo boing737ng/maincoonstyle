@@ -1,6 +1,7 @@
 import "server-only";
 import { Client } from "minio";
 import { randomUUID } from "node:crypto";
+import { publicUrl as buildPublicUrl } from "@/lib/shared";
 
 function getMinioClient(): Client {
   const endPoint = process.env.S3_ENDPOINT || "localhost";
@@ -24,7 +25,7 @@ export async function uploadPhoto(file: File): Promise<{ objectKey: string; url:
     "Content-Type": file.type,
   });
 
-  return { objectKey, url: publicUrl(objectKey) };
+  return { objectKey, url: buildPublicUrl(objectKey) };
 }
 
 export async function deletePhoto(objectKey: string): Promise<void> {
@@ -32,7 +33,4 @@ export async function deletePhoto(objectKey: string): Promise<void> {
   await client.removeObject(BUCKET, objectKey);
 }
 
-export function publicUrl(objectKey: string): string {
-  const base = process.env.S3_PUBLIC_URL || "http://localhost:9000";
-  return `${base.replace(/\/$/, "")}/${BUCKET}/${objectKey}`;
-}
+export { publicUrl } from "@/lib/shared";
