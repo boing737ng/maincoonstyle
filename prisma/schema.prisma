@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AnimalCategory {
+  KITTEN
+  MALE
+  FEMALE
+}
+
+enum AnimalStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model Animal {
+  id            String         @id @default(cuid())
+  category      AnimalCategory
+  number        String?
+  name          String
+  birthDate     DateTime?
+  sex           String?
+  color         String?
+  price         Int?
+  parents       String?
+  personality   String?
+  status        AnimalStatus   @default(AVAILABLE)
+  published     Boolean        @default(false)
+  sortOrder     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  photos        AnimalPhoto[]
+
+  @@index([category, published])
+  @@index([sortOrder])
+}
+
+model AnimalPhoto {
+  id        String   @id @default(cuid())
+  animalId  String
+  animal    Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  objectKey String
+  sortOrder Int      @default(0)
+  isCover   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([animalId])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  login        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
