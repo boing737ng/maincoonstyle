@@ -22,6 +22,12 @@ const STATUSES = [
   { value: "SOLD", label: "Продан" },
 ] as const;
 
+const SEXES = [
+  { value: "", label: "Не указан" },
+  { value: "Кот", label: "Кот" },
+  { value: "Кошка", label: "Кошка" },
+] as const;
+
 type AnimalWithPhotos = Animal & { photos: AnimalPhoto[] };
 
 function toDateInput(date: Date | null): string {
@@ -125,10 +131,6 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
           <input name="name" required defaultValue={animal?.name ?? ""} className={inputClass} />
         </Field>
 
-        <Field label="Номер">
-          <input name="number" defaultValue={animal?.number ?? ""} className={inputClass} />
-        </Field>
-
         <Field label="Дата рождения">
           <input
             type="date"
@@ -139,7 +141,17 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
         </Field>
 
         <Field label="Пол">
-          <input name="sex" defaultValue={animal?.sex ?? ""} className={inputClass} />
+          <select
+            name="sex"
+            defaultValue={animal?.sex ?? ""}
+            className={inputClass}
+          >
+            {SEXES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Окрас">
@@ -165,15 +177,6 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
             ))}
           </select>
         </Field>
-
-        <Field label="Порядок сортировки">
-          <input
-            type="number"
-            name="sortOrder"
-            defaultValue={animal?.sortOrder ?? 0}
-            className={inputClass}
-          />
-        </Field>
       </div>
 
       <Field label="Родители">
@@ -189,15 +192,24 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
         />
       </Field>
 
-      <label className="flex items-center gap-2 text-sm text-foreground">
-        <input
-          type="checkbox"
-          name="published"
-          defaultChecked={animal?.published ?? false}
-          className="h-4 w-4 rounded border-border bg-card accent-[var(--accent)]"
-        />
-        Опубликовать
-      </label>
+      <div className="rounded-lg border-2 border-accent/40 bg-accent/5 p-4">
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            name="published"
+            defaultChecked={animal?.published ?? true}
+            className="mt-0.5 h-5 w-5 rounded border-border bg-card accent-[var(--accent)]"
+          />
+          <span>
+            <span className="block font-medium text-foreground">
+              Опубликовать на сайте
+            </span>
+            <span className="mt-0.5 block text-sm text-muted">
+              Если отключено — животное не будет видно посетителям.
+            </span>
+          </span>
+        </label>
+      </div>
 
       <div className="rounded-lg border border-border bg-card p-4">
         <p className="mb-2 text-sm font-medium">Фото (до {MAX_PHOTOS_PER_ANIMAL})</p>

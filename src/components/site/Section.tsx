@@ -1,5 +1,18 @@
 import type { ReactNode } from "react";
 
+export function PageHeader({ title }: { title: string }) {
+  return (
+    <div className="relative overflow-hidden border-b border-border bg-gradient-to-b from-[#1a1420] to-background">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,162,74,0.12),transparent_60%)]" />
+      <div className="container-site relative py-16 text-center sm:py-20">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          {title}
+        </h1>
+      </div>
+    </div>
+  );
+}
+
 export function Section({
   id,
   title,

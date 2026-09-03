@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { animalSchema, loginSchema } from "@/lib/schemas";
+import type { AnimalCategory } from "@prisma/client";
 import { verifyAdminCredentials } from "@/lib/auth";
 import { createSession, destroySession, getSession } from "@/lib/session";
 import {
@@ -84,7 +85,6 @@ function validatePhotos(files: File[]): ActionResult | null {
 function parseAnimalForm(formData: FormData) {
   const raw: Record<string, unknown> = {
     category: formData.get("category"),
-    number: formData.get("number"),
     name: formData.get("name"),
     birthDate: formData.get("birthDate") || null,
     sex: formData.get("sex"),
@@ -94,9 +94,28 @@ function parseAnimalForm(formData: FormData) {
     personality: formData.get("personality"),
     status: formData.get("status"),
     published: formData.get("published") === "on",
-    sortOrder: formData.get("sortOrder"),
   };
   return animalSchema.safeParse(raw);
+}
+
+async function nextAnimalNumber(category: AnimalCategory): Promise<string> {
+  const result = await prisma.animal.aggregate({
+    where: { category },
+    _max: { number: true },
+  });
+
+  const max = result._max.number;
+  const current = max ? Number.parseInt(max, 10) : 0;
+  const next = Number.isNaN(current) ? 1 : current + 1;
+  return String(next);
+}
+
+async function nextSortOrder(category: AnimalCategory): Promise<number> {
+  const result = await prisma.animal.aggregate({
+    where: { category },
+    _max: { sortOrder: true },
+  });
+  return (result._max.sortOrder ?? 0) + 1;
 }
 
 export async function createAnimalAction(
@@ -123,10 +142,15 @@ export async function createAnimalAction(
   const coverIndex = Number(formData.get("coverIndex") ?? "0");
   const data = parsed.data;
 
+  const [number, sortOrder] = await Promise.all([
+    nextAnimalNumber(data.category),
+    nextSortOrder(data.category),
+  ]);
+
   const animal = await prisma.animal.create({
     data: {
       category: data.category,
-      number: data.number ?? null,
+      number,
       name: data.name,
       birthDate: data.birthDate ?? null,
       sex: data.sex ?? null,
@@ -136,7 +160,7 @@ export async function createAnimalAction(
       personality: data.personality ?? null,
       status: data.status,
       published: data.published,
-      sortOrder: data.sortOrder,
+      sortOrder,
     },
   });
 
@@ -190,7 +214,6 @@ export async function updateAnimalAction(
     where: { id },
     data: {
       category: data.category,
-      number: data.number ?? null,
       name: data.name,
       birthDate: data.birthDate ?? null,
       sex: data.sex ?? null,
@@ -200,7 +223,6 @@ export async function updateAnimalAction(
       personality: data.personality ?? null,
       status: data.status,
       published: data.published,
-      sortOrder: data.sortOrder,
     },
   });
 

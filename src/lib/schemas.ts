@@ -8,7 +8,6 @@ export const AnimalStatus = z.enum(ANIMAL_STATUSES);
 
 export const animalSchema = z.object({
   category: AnimalCategory,
-  number: z.string().trim().max(32).optional().nullable(),
   name: z.string().trim().min(1, "Введите кличку").max(100),
   birthDate: z.coerce.date().optional().nullable(),
   sex: z.string().trim().max(16).optional().nullable(),
@@ -23,7 +22,6 @@ export const animalSchema = z.object({
   personality: z.string().trim().max(2000).optional().nullable(),
   status: AnimalStatus.default("AVAILABLE"),
   published: z.boolean().default(false),
-  sortOrder: z.coerce.number().int().default(0),
 });
 
 export const loginSchema = z.object({

@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
-import type { AnimalCategory } from "@prisma/client";
+import type { AnimalCategory, AnimalStatus, Prisma } from "@prisma/client";
 
 export async function getPublishedAnimals(category?: AnimalCategory) {
   return prisma.animal.findMany({
@@ -31,4 +31,56 @@ export async function getAnimalById(id: string) {
       photos: { orderBy: { sortOrder: "asc" } },
     },
   });
+}
+
+export type KittenFilters = {
+  sex?: string;
+  color?: string;
+  status?: AnimalStatus;
+  sort?: "sortOrder" | "price-asc" | "price-desc" | "newest";
+};
+
+export async function getKittens(filters: KittenFilters = {}) {
+  const where: Prisma.AnimalWhereInput = {
+    category: "KITTEN",
+    published: true,
+    ...(filters.sex ? { sex: filters.sex } : {}),
+    ...(filters.color ? { color: filters.color } : {}),
+    ...(filters.status ? { status: filters.status } : {}),
+  };
+
+  const orderBy: Prisma.AnimalOrderByWithRelationInput[] = (() => {
+    switch (filters.sort) {
+      case "price-asc":
+        return [{ price: "asc" }];
+      case "price-desc":
+        return [{ price: "desc" }];
+      case "newest":
+        return [{ birthDate: "desc" }];
+      default:
+        return [{ sortOrder: "asc" }, { createdAt: "desc" }];
+    }
+  })();
+
+  return prisma.animal.findMany({
+    where,
+    orderBy,
+    include: {
+      photos: { orderBy: { sortOrder: "asc" } },
+    },
+  });
+}
+
+export async function getKittenFilterOptions() {
+  const kittens = await prisma.animal.findMany({
+    where: { category: "KITTEN", published: true },
+    select: { sex: true, color: true },
+  });
+
+  const sexes = [...new Set(kittens.map((k) => k.sex).filter(Boolean))] as string[];
+  const colors = [
+    ...new Set(kittens.map((k) => k.color).filter(Boolean)),
+  ] as string[];
+
+  return { sexes, colors };
 }
