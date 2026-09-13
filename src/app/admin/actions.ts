@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { animalSchema, loginSchema } from "@/lib/schemas";
-import type { AnimalCategory } from "@prisma/client";
+import { animalSchema, loginSchema, productSchema } from "@/lib/schemas";
+import type { AnimalCategory, ProductCategory } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { verifyAdminCredentials } from "@/lib/auth";
 import { createSession, destroySession, getSession } from "@/lib/session";
 import {
@@ -82,20 +83,78 @@ function validatePhotos(files: File[]): ActionResult | null {
   return null;
 }
 
+function parseCoverIndex(formData: FormData, fileCount: number): number | ActionResult {
+  if (fileCount === 0) return 0;
+
+  const value = formData.get("coverIndex");
+  const index = typeof value === "string" ? Number(value) : Number.NaN;
+  if (!Number.isInteger(index) || index < 0 || index >= fileCount) {
+    return { ok: false, error: "Выберите корректную обложку" };
+  }
+  return index;
+}
+
+async function uploadAnimalPhotos(files: File[]): Promise<string[]> {
+  const objectKeys: string[] = [];
+  try {
+    for (const file of files) {
+      const { objectKey } = await uploadPhoto(file);
+      objectKeys.push(objectKey);
+    }
+    return objectKeys;
+  } catch (error) {
+    await Promise.allSettled(objectKeys.map((objectKey) => deletePhotoFromStorage(objectKey)));
+    throw error;
+  }
+}
+
 function parseAnimalForm(formData: FormData) {
+  const category = formData.get("category");
   const raw: Record<string, unknown> = {
-    category: formData.get("category"),
+    category,
     name: formData.get("name"),
     birthDate: formData.get("birthDate") || null,
-    sex: formData.get("sex"),
+    sex:
+      category === "MALE"
+        ? "Кот"
+        : category === "FEMALE"
+        ? "Кошка"
+        : formData.get("sex"),
     color: formData.get("color"),
     price: formData.get("price") || null,
-    parents: formData.get("parents"),
+    fatherId: formData.get("fatherId") || null,
+    motherId: formData.get("motherId") || null,
     personality: formData.get("personality"),
-    status: formData.get("status"),
+    status: category === "KITTEN" ? formData.get("status") : "AVAILABLE",
     published: formData.get("published") === "on",
   };
   return animalSchema.safeParse(raw);
+}
+
+async function validateParents(
+  fatherId: string | null | undefined,
+  motherId: string | null | undefined,
+  animalId?: string
+): Promise<ActionResult | null> {
+  if ((fatherId && fatherId === animalId) || (motherId && motherId === animalId)) {
+    return { ok: false, error: "Животное не может быть собственным родителем" };
+  }
+  if (fatherId && fatherId === motherId) {
+    return { ok: false, error: "Отец и мать должны быть разными животными" };
+  }
+  const ids = [fatherId, motherId].filter(Boolean) as string[];
+  if (ids.length === 0) return null;
+  const parents = await prisma.animal.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, category: true },
+  });
+  if (fatherId && !parents.some((parent) => parent.id === fatherId && parent.category === "MALE")) {
+    return { ok: false, error: "Выберите кота в качестве отца" };
+  }
+  if (motherId && !parents.some((parent) => parent.id === motherId && parent.category === "FEMALE")) {
+    return { ok: false, error: "Выберите кошку в качестве матери" };
+  }
+  return null;
 }
 
 async function nextAnimalNumber(category: AnimalCategory): Promise<string> {
@@ -139,47 +198,178 @@ export async function createAnimalAction(
   const photoError = validatePhotos(files);
   if (photoError) return photoError;
 
-  const coverIndex = Number(formData.get("coverIndex") ?? "0");
+  const coverIndex = parseCoverIndex(formData, files.length);
+  if (typeof coverIndex !== "number") return coverIndex;
   const data = parsed.data;
+  const parentError = data.category === "KITTEN"
+    ? await validateParents(data.fatherId, data.motherId)
+    : null;
+  if (parentError) return parentError;
 
   const [number, sortOrder] = await Promise.all([
     nextAnimalNumber(data.category),
     nextSortOrder(data.category),
   ]);
 
-  const animal = await prisma.animal.create({
-    data: {
-      category: data.category,
-      number,
-      name: data.name,
-      birthDate: data.birthDate ?? null,
-      sex: data.sex ?? null,
-      color: data.color ?? null,
-      price: data.price ?? null,
-      parents: data.parents ?? null,
-      personality: data.personality ?? null,
-      status: data.status,
-      published: data.published,
-      sortOrder,
-    },
-  });
+  let objectKeys: string[];
+  try {
+    objectKeys = await uploadAnimalPhotos(files);
+  } catch (error) {
+    console.error("createAnimalAction upload failed:", error);
+    return { ok: false, error: "Не удалось загрузить фото. Попробуйте ещё раз." };
+  }
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const { objectKey } = await uploadPhoto(file);
-    await prisma.animalPhoto.create({
-      data: {
-        animalId: animal.id,
-        objectKey,
-        sortOrder: i,
-        isCover: i === coverIndex,
-      },
+  try {
+    await prisma.$transaction(async (tx) => {
+      const animal = await tx.animal.create({
+        data: {
+          category: data.category,
+          number,
+          name: data.name,
+          birthDate: data.birthDate ?? null,
+          sex: data.sex ?? null,
+          color: data.color ?? null,
+          price: data.category === "KITTEN" ? data.price ?? null : null,
+          fatherId: data.category === "KITTEN" ? data.fatherId ?? null : null,
+          motherId: data.category === "KITTEN" ? data.motherId ?? null : null,
+          personality: data.category === "KITTEN" ? data.personality ?? null : null,
+          status: data.category === "KITTEN" ? data.status : "AVAILABLE",
+          published: data.published,
+          sortOrder,
+        },
+      });
+      if (objectKeys.length > 0) {
+        await tx.animalPhoto.createMany({
+          data: objectKeys.map((objectKey, index) => ({
+            animalId: animal.id,
+            objectKey,
+            sortOrder: index,
+            isCover: index === coverIndex,
+          })),
+        });
+      }
     });
+  } catch (error) {
+    await Promise.allSettled(objectKeys.map((objectKey) => deletePhotoFromStorage(objectKey)));
+    console.error("createAnimalAction failed:", error);
+    return { ok: false, error: "Не удалось сохранить животное. Попробуйте ещё раз." };
   }
 
   revalidatePath("/");
   revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function createProductAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = productSchema.safeParse({
+    category: formData.get("category"),
+    number: formData.get("number"),
+    published: formData.get("published") === "on",
+  });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message || "Неверные данные" };
+  const files = formData.getAll("photos").filter((file): file is File => file instanceof File && file.size > 0);
+  const photoError = validatePhotos(files);
+  if (photoError) return photoError;
+  const category = parsed.data.category as ProductCategory;
+  const max = await prisma.product.aggregate({ where: { category }, _max: { sortOrder: true } });
+  try {
+    const product = await prisma.product.create({
+      data: { ...parsed.data, sortOrder: (max._max.sortOrder ?? 0) + 1 },
+    });
+    for (let index = 0; index < files.length; index++) {
+      const { objectKey } = await uploadPhoto(files[index]);
+      await prisma.productPhoto.create({ data: { productId: product.id, objectKey, sortOrder: index, isCover: index === 0 } });
+    }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { ok: false, error: "Товар с таким номером уже существует" };
+    }
+    console.error("createProductAction failed:", error);
+    return { ok: false, error: "Не удалось сохранить товар. Попробуйте ещё раз." };
+  }
+  revalidatePath("/furniture");
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function toggleProductPublishedAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  await requireAdmin();
+  const id = formData.get("id");
+  if (typeof id !== "string") return { ok: false, error: "Неверные данные" };
+  const product = await prisma.product.findUnique({ where: { id }, select: { published: true } });
+  if (!product) return { ok: false, error: "Товар не найден" };
+  await prisma.product.update({ where: { id }, data: { published: !product.published } });
+  revalidatePath("/furniture");
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+export async function updateProductAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+  const id = formData.get("id");
+  if (typeof id !== "string") return { ok: false, error: "Неверные данные" };
+  const parsed = productSchema.safeParse({ category: formData.get("category"), number: formData.get("number"), published: formData.get("published") === "on" });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message || "Неверные данные" };
+  const product = await prisma.product.findUnique({ where: { id }, include: { photos: true } });
+  if (!product) return { ok: false, error: "Товар не найден" };
+  const files = formData.getAll("photos").filter((file): file is File => file instanceof File && file.size > 0);
+  const photoError = validatePhotos(files);
+  if (photoError) return photoError;
+  if (product.photos.length + files.length > MAX_PHOTOS_PER_ANIMAL) return { ok: false, error: `Можно загрузить не более ${MAX_PHOTOS_PER_ANIMAL} фото` };
+  try {
+    await prisma.product.update({ where: { id }, data: parsed.data });
+    for (let index = 0; index < files.length; index++) {
+      const { objectKey } = await uploadPhoto(files[index]);
+      await prisma.productPhoto.create({ data: { productId: id, objectKey, sortOrder: product.photos.length + index, isCover: product.photos.length === 0 && index === 0 } });
+    }
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { ok: false, error: "Товар с таким номером уже существует" };
+    }
+    console.error("updateProductAction failed:", error);
+    return { ok: false, error: "Не удалось сохранить товар. Попробуйте ещё раз." };
+  }
+  revalidatePath("/furniture"); revalidatePath("/admin"); revalidatePath(`/admin/products/${id}/edit`);
+  return { ok: true };
+}
+
+export async function deleteProductAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+  const id = formData.get("id");
+  if (typeof id !== "string") return { ok: false, error: "Неверные данные" };
+  const product = await prisma.product.findUnique({ where: { id }, include: { photos: true } });
+  if (!product) return { ok: false, error: "Товар не найден" };
+  for (const photo of product.photos) await deletePhotoFromStorage(photo.objectKey);
+  await prisma.product.delete({ where: { id } });
+  revalidatePath("/furniture"); revalidatePath("/admin");
   redirect("/admin");
+}
+
+async function getProductPhoto(photoId: FormDataEntryValue | null, productId: FormDataEntryValue | null) {
+  if (typeof photoId !== "string" || typeof productId !== "string") return null;
+  const photo = await prisma.productPhoto.findUnique({ where: { id: photoId } });
+  return photo?.productId === productId ? photo : null;
+}
+
+export async function deleteProductPhotoAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  await requireAdmin(); const photo = await getProductPhoto(formData.get("photoId"), formData.get("productId"));
+  if (!photo) return { ok: false, error: "Фото не найдено" };
+  await deletePhotoFromStorage(photo.objectKey); await prisma.productPhoto.delete({ where: { id: photo.id } });
+  revalidatePath(`/admin/products/${photo.productId}/edit`); revalidatePath("/furniture"); return { ok: true };
+}
+
+export async function setProductCoverAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  await requireAdmin(); const photo = await getProductPhoto(formData.get("photoId"), formData.get("productId"));
+  if (!photo) return { ok: false, error: "Фото не найдено" };
+  await prisma.$transaction([prisma.productPhoto.updateMany({ where: { productId: photo.productId }, data: { isCover: false } }), prisma.productPhoto.update({ where: { id: photo.id }, data: { isCover: true } })]);
+  revalidatePath(`/admin/products/${photo.productId}/edit`); revalidatePath("/furniture"); return { ok: true };
 }
 
 export async function updateAnimalAction(
@@ -209,56 +399,75 @@ export async function updateAnimalAction(
   if (!animal) {
     return { ok: false, error: "Животное не найдено" };
   }
-
-  await prisma.animal.update({
-    where: { id },
-    data: {
-      category: data.category,
-      name: data.name,
-      birthDate: data.birthDate ?? null,
-      sex: data.sex ?? null,
-      color: data.color ?? null,
-      price: data.price ?? null,
-      parents: data.parents ?? null,
-      personality: data.personality ?? null,
-      status: data.status,
-      published: data.published,
-    },
-  });
+  const parentError = data.category === "KITTEN"
+    ? await validateParents(data.fatherId, data.motherId, id)
+    : null;
+  if (parentError) return parentError;
 
   const files = formData
     .getAll("photos")
     .filter((f): f is File => f instanceof File && f.size > 0);
 
-  if (files.length > 0) {
-    const existingCount = animal.photos.length;
-    if (existingCount + files.length > MAX_PHOTOS_PER_ANIMAL) {
-      return {
-        ok: false,
-        error: `Всего фото не может превышать ${MAX_PHOTOS_PER_ANIMAL}`,
-      };
-    }
-    const photoError = validatePhotos(files);
-    if (photoError) return photoError;
+  const existingCount = animal.photos.length;
+  if (existingCount + files.length > MAX_PHOTOS_PER_ANIMAL) {
+    return {
+      ok: false,
+      error: `Всего фото не может превышать ${MAX_PHOTOS_PER_ANIMAL}`,
+    };
+  }
+  const photoError = validatePhotos(files);
+  if (photoError) return photoError;
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const { objectKey } = await uploadPhoto(file);
-      await prisma.animalPhoto.create({
+  const coverIndex = parseCoverIndex(formData, files.length);
+  if (typeof coverIndex !== "number") return coverIndex;
+
+  let objectKeys: string[];
+  try {
+    objectKeys = await uploadAnimalPhotos(files);
+  } catch (error) {
+    console.error("updateAnimalAction upload failed:", error);
+    return { ok: false, error: "Не удалось загрузить фото. Попробуйте ещё раз." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.animal.update({
+        where: { id },
         data: {
-          animalId: id,
-          objectKey,
-          sortOrder: existingCount + i,
-          isCover: false,
+          category: data.category,
+          name: data.name,
+          birthDate: data.birthDate ?? null,
+          sex: data.sex ?? null,
+          color: data.color ?? null,
+          price: data.category === "KITTEN" ? data.price ?? null : null,
+          fatherId: data.category === "KITTEN" ? data.fatherId ?? null : null,
+          motherId: data.category === "KITTEN" ? data.motherId ?? null : null,
+          personality: data.category === "KITTEN" ? data.personality ?? null : null,
+          status: data.category === "KITTEN" ? data.status : "AVAILABLE",
+          published: data.published,
         },
       });
-    }
+      if (objectKeys.length > 0) {
+        await tx.animalPhoto.createMany({
+          data: objectKeys.map((objectKey, index) => ({
+            animalId: id,
+            objectKey,
+            sortOrder: existingCount + index,
+            isCover: existingCount === 0 && index === coverIndex,
+          })),
+        });
+      }
+    });
+  } catch (error) {
+    await Promise.allSettled(objectKeys.map((objectKey) => deletePhotoFromStorage(objectKey)));
+    console.error("updateAnimalAction failed:", error);
+    return { ok: false, error: "Не удалось сохранить животное. Попробуйте ещё раз." };
   }
 
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath(`/admin/animals/${id}/edit`);
-  redirect("/admin");
+  return { ok: true };
 }
 
 export async function deleteAnimalAction(
@@ -327,6 +536,11 @@ export async function setCoverAction(
     return { ok: false, error: "Неверные данные" };
   }
 
+  const photo = await prisma.animalPhoto.findUnique({ where: { id: photoId } });
+  if (!photo || photo.animalId !== animalId) {
+    return { ok: false, error: "Фото не найдено" };
+  }
+
   await prisma.$transaction([
     prisma.animalPhoto.updateMany({
       where: { animalId },
@@ -339,6 +553,35 @@ export async function setCoverAction(
   ]);
 
   revalidatePath(`/admin/animals/${animalId}/edit`);
+  return { ok: true };
+}
+
+export async function togglePublishedAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const id = formData.get("id");
+  if (typeof id !== "string" || !id) {
+    return { ok: false, error: "Не указан идентификатор" };
+  }
+
+  const animal = await prisma.animal.findUnique({
+    where: { id },
+    select: { published: true },
+  });
+  if (!animal) {
+    return { ok: false, error: "Животное не найдено" };
+  }
+
+  await prisma.animal.update({
+    where: { id },
+    data: { published: !animal.published },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin");
   return { ok: true };
 }
 
@@ -363,6 +606,10 @@ export async function movePhotoAction(
     where: { animalId },
     orderBy: { sortOrder: "asc" },
   });
+
+  if (!photos.some((photo) => photo.id === photoId)) {
+    return { ok: false, error: "Фото не найдено" };
+  }
 
   const index = photos.findIndex((p) => p.id === photoId);
   if (index === -1) {

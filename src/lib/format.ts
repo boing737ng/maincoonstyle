@@ -7,9 +7,9 @@ export const STATUS_LABELS: Record<AnimalStatus, string> = {
 };
 
 export const STATUS_STYLES: Record<AnimalStatus, string> = {
-  AVAILABLE: "bg-green-600/15 text-green-400 border-green-600/40",
-  RESERVED: "bg-amber-600/15 text-amber-400 border-amber-600/40",
-  SOLD: "bg-zinc-600/15 text-zinc-400 border-zinc-600/40",
+  AVAILABLE: "border-emerald-300/40 bg-[#23301c]/85 text-[#b1d598]",
+  RESERVED: "border-amber-200/40 bg-[#332815]/85 text-[#e8c084]",
+  SOLD: "border-stone-300/30 bg-[#3a332b]/85 text-stone-300",
 };
 
 export const CATEGORY_LABELS: Record<string, string> = {

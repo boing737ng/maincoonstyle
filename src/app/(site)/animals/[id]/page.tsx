@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAnimalById, getKittens } from "@/lib/animals";
@@ -8,6 +9,9 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { AnimalGallery } from "@/components/site/AnimalGallery";
 import { KittenGrid } from "@/components/site/AnimalGrids";
 import { Section } from "@/components/site/Section";
+import { PawIcon } from "@/components/site/icons";
+import { publicUrl } from "@/lib/shared";
+import type { Animal, AnimalPhoto } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +24,12 @@ export async function generateMetadata({
   const animal = await getAnimalById(id);
   if (!animal) return { title: "Животное не найдено" };
   return { title: animal.name };
+}
+
+function sexLabel(sex: string | null): string {
+  if (sex === "Кот") return "Мальчик";
+  if (sex === "Кошка") return "Девочка";
+  return sex ?? "";
 }
 
 export default async function AnimalPage({
@@ -38,94 +48,116 @@ export default async function AnimalPage({
       : animal.category === "MALE"
       ? "Коты"
       : "Кошки";
-  const categoryHref = animal.category === "KITTEN" ? "/kittens" : "/";
+  const categoryHref =
+    animal.category === "KITTEN"
+      ? "/kittens"
+      : animal.category === "MALE"
+      ? "/cats"
+      : "/females";
+
+  if (animal.category !== "KITTEN") {
+    return (
+      <div className="container-site py-10 sm:py-16">
+        <nav aria-label="Хлебные крошки" className="mb-8 text-sm text-muted">
+          <Link href="/" className="hover:text-amber-soft">
+            Главная
+          </Link>
+          <span className="mx-2 text-muted-strong">/</span>
+          <Link href={categoryHref} className="hover:text-amber-soft">
+            {categoryLabel}
+          </Link>
+          <span className="mx-2 text-muted-strong">/</span>
+          <span className="text-foreground">{animal.name}</span>
+        </nav>
+
+        <div className="mx-auto max-w-3xl">
+          <AnimalGallery photos={animal.photos} name={animal.name} />
+          <p className="mt-6 text-center font-display text-2xl text-foreground sm:text-3xl">
+            {animal.name}
+            {animal.color ? (
+              <span className="text-muted"> {animal.color}</span>
+            ) : null}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const siblings = await getKittens({
     sex: animal.sex ?? undefined,
   });
-  const related = siblings
-    .filter((a) => a.id !== animal.id)
-    .slice(0, 3);
+  const related = siblings.filter((a) => a.id !== animal.id).slice(0, 3);
 
   return (
-    <div className="container-site py-8 sm:py-12">
-      <nav aria-label="Хлебные крошки" className="mb-6 text-sm text-muted">
-        <Link href="/" className="hover:text-accent">
+    <div className="container-site py-10 sm:py-16">
+      <nav aria-label="Хлебные крошки" className="mb-8 text-sm text-muted">
+        <Link href="/" className="hover:text-amber-soft">
           Главная
         </Link>
-        <span className="mx-2">/</span>
-        <Link href={categoryHref} className="hover:text-accent">
+        <span className="mx-2 text-muted-strong">/</span>
+        <Link href={categoryHref} className="hover:text-amber-soft">
           {categoryLabel}
         </Link>
-        <span className="mx-2">/</span>
+        <span className="mx-2 text-muted-strong">/</span>
         <span className="text-foreground">{animal.name}</span>
       </nav>
 
-      <div className="grid gap-10 lg:grid-cols-2">
-        <AnimalGallery photos={animal.photos} name={animal.name} />
+      <div className="grid gap-12 lg:grid-cols-12">
+        <div className="lg:col-span-6">
+          <AnimalGallery photos={animal.photos} name={animal.name} />
+        </div>
 
-        <div>
-          <div className="mb-4 flex flex-wrap items-start gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+        <div className="lg:col-span-6">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <h1 className="font-display text-3xl text-foreground sm:text-4xl">
               {animal.name}
             </h1>
             <StatusBadge status={animal.status} />
           </div>
 
-          {animal.price != null && (
-            <p className="mb-6 text-3xl font-bold text-accent">
-              {formatPrice(animal.price)}
-            </p>
-          )}
-
-          <dl className="space-y-3 divide-y divide-border">
-            {animal.number && (
-              <DetailRow label="Номер" value={animal.number} />
-            )}
+          <dl className="divide-y divide-border border-y border-border">
+            <DetailRow label="Пол" value={sexLabel(animal.sex)} />
             {animal.birthDate && (
-              <DetailRow
-                label="Дата рождения"
-                value={formatDate(animal.birthDate)}
-              />
+              <DetailRow label="Дата рождения" value={formatDate(animal.birthDate)} />
             )}
-            {animal.sex && <DetailRow label="Пол" value={animal.sex} />}
             {animal.color && <DetailRow label="Окрас" value={animal.color} />}
-            {animal.parents && (
-              <DetailRow label="Родители" value={animal.parents} />
-            )}
-            {animal.category && (
-              <DetailRow
-                label="Категория"
-                value={
-                  animal.category === "KITTEN"
-                    ? "Котёнок"
-                    : animal.category === "MALE"
-                    ? "Кот"
-                    : "Кошка"
-                }
-              />
+            {animal.price != null && (
+              <div className="flex items-center justify-between gap-4 py-4">
+                <dt className="text-sm text-muted-strong">Цена</dt>
+                <dd className="text-right font-display text-2xl text-amber">
+                  {formatPrice(animal.price)}
+                </dd>
+              </div>
             )}
           </dl>
 
+          {animal.personality && (
+            <div className="mt-6">
+              <h2 className="mb-2 font-display text-xl text-foreground">
+                Характер
+              </h2>
+              <p className="whitespace-pre-line leading-relaxed text-muted">
+                {animal.personality}
+              </p>
+            </div>
+          )}
+
           {animal.status !== "SOLD" ? (
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={`tel:${site.phoneTel}`}
-                className="flex h-12 items-center justify-center rounded-full bg-accent px-8 font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
-              >
+              <a href={`tel:${site.phoneTel}`} className="btn btn-solid">
                 Позвонить
               </a>
               <a
                 href={`mailto:${site.email}?subject=${encodeURIComponent(
                   `Вопрос о питомце: ${animal.name}`
                 )}`}
-                className="flex h-12 items-center justify-center rounded-full border border-accent/40 px-8 font-semibold text-accent transition-colors hover:bg-accent/10"
+                className="btn btn-ghost"
               >
                 Написать
               </a>
             </div>
           ) : (
-            <p className="mt-8 rounded-xl border border-border bg-card px-6 py-4 text-center text-muted">
+            <p className="stitch mt-8 bg-card/40 px-6 py-4 text-muted">
               Этот питомец уже нашёл свой дом, но у нас есть другие замечательные
               котята.
             </p>
@@ -133,18 +165,18 @@ export default async function AnimalPage({
         </div>
       </div>
 
-      {animal.personality && (
-        <section className="mt-12">
-          <h2 className="mb-4 text-2xl font-bold tracking-tight text-foreground">
-            Характер
-          </h2>
-          <p className="max-w-3xl whitespace-pre-line text-lg leading-relaxed text-muted">
-            {animal.personality}
-          </p>
+      {((animal.father?.published ? animal.father : null) ||
+        (animal.mother?.published ? animal.mother : null)) ? (
+        <section className="mt-16 border-t border-border pt-10">
+          <h2 className="font-display text-2xl text-foreground">Родители</h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {animal.father?.published ? <ParentCard label="Отец" parent={animal.father} /> : null}
+            {animal.mother?.published ? <ParentCard label="Мать" parent={animal.mother} /> : null}
+          </div>
         </section>
-      )}
+      ) : null}
 
-      {related.length > 0 && animal.category === "KITTEN" && (
+      {related.length > 0 && (
         <Section id="related" title="Другие котята">
           <KittenGrid kittens={related} />
         </Section>
@@ -153,10 +185,41 @@ export default async function AnimalPage({
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function ParentCard({ label, parent }: { label: string; parent: Animal & { photos: AnimalPhoto[] } }) {
+  const cover = parent.photos.find((photo) => photo.isCover) ?? parent.photos[0];
   return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <dt className="text-sm text-muted">{label}</dt>
+    <Link href={`/animals/${parent.id}`} className="stitch stitch-hover group flex items-center gap-4 bg-card/40 p-3 transition-colors">
+      <div className="photo-frame shrink-0 p-1">
+        <div className="relative h-20 w-20 overflow-hidden rounded bg-card-2">
+          {cover ? (
+            <Image
+              src={publicUrl(cover.objectKey)}
+              alt={parent.name}
+              fill
+              sizes="80px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <PawIcon className="h-7 w-7 text-amber-soft/60" />
+            </div>
+          )}
+        </div>
+      </div>
+      <div>
+        <p className="text-sm font-medium tracking-[0.08em] text-accent-hover">{label}</p>
+        <p className="font-display mt-1 text-xl text-foreground group-hover:text-amber-soft">{parent.name}</p>
+        <p className="mt-1 text-sm text-muted">{parent.color}</p>
+      </div>
+    </Link>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-center justify-between gap-4 py-4">
+      <dt className="text-sm text-muted-strong">{label}</dt>
       <dd className="text-right text-sm font-medium text-foreground">{value}</dd>
     </div>
   );

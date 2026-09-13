@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAnimalById } from "@/lib/animals";
+import { getAnimalById, getParentOptions } from "@/lib/animals";
 import { AnimalForm } from "@/components/admin/AnimalForm";
 import { PhotoManager } from "@/components/admin/PhotoManager";
 
@@ -14,7 +14,7 @@ export default async function EditAnimalPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const animal = await getAnimalById(id);
+  const [animal, parentOptions] = await Promise.all([getAnimalById(id), getParentOptions()]);
   if (!animal) {
     notFound();
   }
@@ -25,7 +25,7 @@ export default async function EditAnimalPage({
         Редактировать: {animal.name}
       </h1>
       <PhotoManager animalId={animal.id} photos={animal.photos} />
-      <AnimalForm animal={animal} />
+      <AnimalForm animal={animal} parentOptions={parentOptions} />
     </div>
   );
 }

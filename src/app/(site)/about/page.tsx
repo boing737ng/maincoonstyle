@@ -8,9 +8,13 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <PageHeader title="О нашем питомнике" />
+      <PageHeader
+        eyebrow="О нас"
+        title="Добро пожаловать в мир больших кошек"
+        subtitle="Домашний питомник ласковых гигантов, где каждого питомца растят с любовью."
+      />
       <Section id="about" title="Наш уютный семейный дом">
-        <div className="mx-auto max-w-3xl space-y-5 text-lg leading-relaxed text-muted">
+        <div className="max-w-3xl space-y-6 text-lg leading-relaxed text-muted">
           <p>
             Приветствуем Вас — тех, кто уже влюбился в породу мейн-кун и мечтает
             стать счастливым обладателем очаровательного пушистого друга. Наш
@@ -34,6 +38,14 @@ export default function AboutPage() {
             Кроме котят мы предлагаем уникальные аксессуары и мебель для ваших
             любимцев, чтобы жизнь вашего нового члена семьи была комфортной и
             счастливой.
+          </p>
+          <p>
+            Приходите познакомиться ближе с нашими кунятами, выберите себе самого
+            большого, мягкого и тёплого друга, который станет частью вашей жизни
+            навсегда. Вместе сделаем этот мир чуть теплее и добрее!
+          </p>
+          <p className="border-t border-border pt-6 font-display text-3xl leading-snug text-accent-hover">
+            ждём вас в гости в наш уютный семейный дом
           </p>
         </div>
       </Section>

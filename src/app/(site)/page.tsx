@@ -1,96 +1,97 @@
 import Link from "next/link";
 import { getPublishedAnimals } from "@/lib/animals";
 import { getSiteData } from "@/lib/constants";
-import { KittenGrid, AdultGrid } from "@/components/site/AnimalGrids";
+import { KittenGrid } from "@/components/site/AnimalGrids";
 import { Section } from "@/components/site/Section";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const site = getSiteData();
-  const [kittens, males, females] = await Promise.all([
+  const [kittens] = await Promise.all([
     getPublishedAnimals("KITTEN"),
-    getPublishedAnimals("MALE"),
-    getPublishedAnimals("FEMALE"),
   ]);
 
   const featuredKittens = kittens.slice(0, 3);
 
   return (
     <>
-      <Hero phoneTel={site.phoneTel} />
+      <Hero siteName={site.name} phoneTel={site.phoneTel} />
 
       <Section
         id="kittens"
-        title="Котята"
-        subtitle="Наши малыши ищут свой дом"
+        eyebrow="сейчас в питомнике"
+        title="Котята, которых уже любят"
+        subtitle="Они растут рядом с нами, в спокойной домашней обстановке."
       >
         <KittenGrid kittens={featuredKittens} />
-        <div className="mt-8 text-center">
-          <Link
-            href="/kittens"
-            className="inline-flex h-12 items-center justify-center rounded-full border border-accent/40 px-8 font-semibold text-accent transition-colors hover:bg-accent/10"
-          >
+        <div className="mt-12">
+          <Link href="/kittens" className="btn btn-ghost">
             Все котята
           </Link>
         </div>
       </Section>
 
-      <Section id="cats" title="Коты" subtitle="Наши производители">
-        <AdultGrid
-          animals={males}
-          emptyText="Информация о наших котах скоро появится."
-        />
-      </Section>
-
-      <Section id="females" title="Кошки" subtitle="Наши производительницы">
-        <AdultGrid
-          animals={females}
-          emptyText="Информация о наших кошках скоро появится."
-        />
-      </Section>
-
-      <Section id="links" title="Узнайте больше">
-        <CtaLinks
-          phoneTel={site.phoneTel}
-          phoneDisplay={site.phoneDisplay}
-        />
+      <Section
+        id="links"
+        eyebrow="загляните в наш дом"
+        title="Питомник изнутри"
+      >
+        <CtaLinks phoneTel={site.phoneTel} phoneDisplay={site.phoneDisplay} />
       </Section>
     </>
   );
 }
 
-function Hero({ phoneTel }: { phoneTel: string }) {
+function Hero({
+  siteName,
+  phoneTel,
+}: {
+  siteName: string;
+  phoneTel: string;
+}) {
+  const [nameFirst, ...nameRest] = siteName.split(" ");
+
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-[#1a1420] via-background to-background">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(200,162,74,0.15),transparent_60%)]" />
-      <div className="container-site relative flex min-h-[80vh] flex-col items-center justify-center py-24 text-center">
-        <p className="mb-4 text-sm uppercase tracking-[0.3em] text-accent">
-          Питомник мейн-кунов
-        </p>
-        <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl">
-          Добро пожаловать в мир больших кошек!
-        </h1>
-        <p className="mt-6 max-w-xl text-lg text-muted">
-          Домашний питомник ласковых гигантов. Поможем каждому малышу найти
-          самую лучшую и любящую семью.
-        </p>
-        <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-          <a
-            href={`tel:${phoneTel}`}
-            className="flex h-12 items-center justify-center rounded-full bg-accent px-8 font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
-          >
-            Позвонить
-          </a>
-          <Link
-            href="/kittens"
-            className="flex h-12 items-center justify-center rounded-full border border-accent/40 px-8 font-semibold text-accent transition-colors hover:bg-accent/10"
-          >
-            Смотреть котят
-          </Link>
+    <section className="relative isolate overflow-hidden border-b border-border">
+      <div className="container-site grid items-center gap-12 py-16 md:grid-cols-[1.05fr_0.95fr] md:py-24">
+        <div className="max-w-2xl">
+          <p className="text-sm font-medium tracking-[0.08em] text-accent-hover">
+            питомник кошек мейн-кун
+          </p>
+          <h1 className="mt-5 text-5xl leading-[1.05] sm:text-6xl md:text-7xl">
+            {nameFirst} {nameRest.join(" ") || "CATTERY"}
+          </h1>
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+            Дом больших кошек, где каждый мейн-кун растёт рядом с людьми, в заботе,
+            спокойствии и любви.
+          </p>
+
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link href="/kittens" className="btn btn-solid">
+              Смотреть котят
+            </Link>
+            <a href={`tel:${phoneTel}`} className="btn btn-ghost">
+              Связаться с нами
+            </a>
+          </div>
         </div>
+        <HomeMark />
       </div>
     </section>
+  );
+}
+
+function HomeMark() {
+  return (
+    <div className="relative mx-auto flex aspect-square w-full max-w-md items-center justify-center overflow-hidden rounded-[2rem] border border-border bg-card">
+      <div className="absolute h-64 w-64 rounded-full bg-accent/10 blur-3xl" />
+      <div className="relative flex h-48 w-48 items-center justify-center rounded-full border border-accent/35">
+        <div className="flex h-36 w-36 items-center justify-center rounded-full border border-accent/20 bg-background">
+          <span className="font-display text-5xl tracking-[0.08em] text-accent">LB</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -104,26 +105,31 @@ function CtaLinks({
   const links = [
     { href: "/about", label: "О питомнике" },
     { href: "/breed", label: "О породе" },
-    { href: "/furniture", label: "Лежанки и мебель" },
+    { href: "/furniture", label: "Лежанки, Мебель" },
     { href: "/contacts", label: "Контакты" },
   ];
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className="flex h-16 items-center justify-center rounded-xl border border-border bg-card px-4 text-center font-medium text-foreground transition-colors hover:border-accent hover:text-accent"
+            className="stitch stitch-hover group flex min-h-32 items-end bg-card/40 p-5 transition-colors"
           >
-            {link.label}
+            <span className="font-display text-xl leading-tight text-foreground transition-colors group-hover:text-amber-soft">
+              {link.label}
+            </span>
           </Link>
         ))}
       </div>
-      <p className="mt-8 text-center text-muted">
+      <p className="mt-8 text-sm text-muted">
         Или позвоните нам:{" "}
-        <a href={`tel:${phoneTel}`} className="font-semibold text-accent hover:text-accent-hover">
+        <a
+          href={`tel:${phoneTel}`}
+          className="font-semibold text-amber hover:text-amber-soft"
+        >
           {phoneDisplay}
         </a>
       </p>

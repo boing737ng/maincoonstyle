@@ -6,7 +6,7 @@ export function StatusBadge({ status }: { status: AnimalStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-md border px-2 py-1 text-xs font-semibold backdrop-blur-sm",
         STATUS_STYLES[status]
       )}
     >

@@ -2,8 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Animal, AnimalPhoto } from "@prisma/client";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatPrice, formatDate } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import { publicUrl } from "@/lib/shared";
+import { cn } from "@/lib/cn";
 
 type AnimalWithPhotos = Animal & { photos: AnimalPhoto[] };
 
@@ -11,107 +12,114 @@ function coverPhoto(animal: AnimalWithPhotos): AnimalPhoto | undefined {
   return animal.photos.find((p) => p.isCover) ?? animal.photos[0];
 }
 
-export function KittenCard({ animal }: { animal: AnimalWithPhotos }) {
+function sexWord(sex: string | null): string {
+  if (sex === "Кот") return "мальчик";
+  if (sex === "Кошка") return "девочка";
+  return sex?.toLowerCase() ?? "";
+}
+
+export function KittenCard({
+  animal,
+}: {
+  animal: AnimalWithPhotos;
+}) {
   const cover = coverPhoto(animal);
   const photoCount = animal.photos.length;
+  const isSold = animal.status === "SOLD";
+  const caption = [animal.name, sexWord(animal.sex)]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <Link
       href={`/animals/${animal.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
-      <div className="relative aspect-square w-full overflow-hidden">
-        {cover ? (
-          <Image
-            src={publicUrl(cover.objectKey)}
-            alt={animal.name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <ImagePlaceholder name={animal.name} />
-        )}
-        <div className="absolute left-3 top-3">
-          <StatusBadge status={animal.status} />
-        </div>
-        {photoCount > 1 ? (
-          <span className="absolute bottom-3 right-3 rounded-full bg-background/80 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur">
-            {photoCount} фото
+      <div className="photo-frame polaroid relative">
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-card-2">
+          {cover ? (
+            <Image
+              src={publicUrl(cover.objectKey)}
+              alt={animal.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className={cn(
+                "object-cover",
+                isSold && "opacity-50 grayscale"
+              )}
+            />
+          ) : (
+            <ImagePlaceholder name={animal.name} />
+          )}
+          <span className="absolute left-3 top-3">
+            <StatusBadge status={animal.status} />
           </span>
-        ) : null}
-      </div>
-
-      <div className="flex flex-1 flex-col gap-2 p-5">
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="text-lg font-semibold text-foreground group-hover:text-accent transition-colors">
-            {animal.name}
-          </h3>
-          {animal.price != null && (
-            <span className="whitespace-nowrap font-semibold text-accent">
-              {formatPrice(animal.price)}
+          {photoCount > 1 ? (
+            <span className="absolute bottom-3 right-3 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
+              {photoCount} фото
             </span>
-          )}
+          ) : null}
         </div>
-
-        <dl className="space-y-1 text-sm text-muted">
-          {animal.number && <InfoRow label="Номер" value={animal.number} />}
-          {animal.birthDate && (
-            <InfoRow label="Дата рождения" value={formatDate(animal.birthDate)} />
-          )}
-          {animal.sex && <InfoRow label="Пол" value={animal.sex} />}
-          {animal.color && <InfoRow label="Окрас" value={animal.color} />}
-          {animal.parents && <InfoRow label="Родители" value={animal.parents} />}
-        </dl>
-
-        <span className="mt-auto pt-2 text-sm font-medium text-accent">
-          Подробнее →
-        </span>
+        <p className="polaroid-caption">{caption}</p>
+        <div className="grid grid-cols-2 gap-4 border-t border-border px-4 py-3">
+          <div className="min-w-0">
+            <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-strong">
+              Окрас
+            </span>
+            <span className="mt-1 block truncate text-sm text-muted">
+              {animal.color || "Не указан"}
+            </span>
+          </div>
+          <div className="min-w-0 text-right">
+            <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-strong">
+              Цена
+            </span>
+            <span className="mt-1 block truncate text-sm font-semibold text-accent">
+              {animal.price != null ? formatPrice(animal.price) : "По запросу"}
+            </span>
+          </div>
+        </div>
       </div>
     </Link>
   );
 }
 
-export function AdultCard({ animal }: { animal: AnimalWithPhotos }) {
+export function AdultCard({
+  animal,
+}: {
+  animal: AnimalWithPhotos;
+}) {
   const cover = coverPhoto(animal);
   const photoCount = animal.photos.length;
+  const caption = [animal.name, animal.color]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <Link
       href={`/animals/${animal.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
     >
-      <div className="relative aspect-square w-full overflow-hidden">
-        {cover ? (
-          <Image
-            src={publicUrl(cover.objectKey)}
-            alt={animal.name}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <ImagePlaceholder name={animal.name} />
-        )}
-        {photoCount > 1 ? (
-          <span className="absolute bottom-3 right-3 rounded-full bg-background/80 px-2.5 py-1 text-xs font-medium text-foreground backdrop-blur">
-            {photoCount} фото
-          </span>
-        ) : null}
-      </div>
-      <div className="flex flex-1 flex-col gap-2 p-5">
-        <h3 className="text-lg font-semibold text-foreground group-hover:text-accent transition-colors">
-          {animal.name}
-        </h3>
-        <dl className="space-y-1 text-sm text-muted">
-          {animal.birthDate && (
-            <InfoRow label="Дата рождения" value={formatDate(animal.birthDate)} />
+      <div className="photo-frame polaroid relative">
+        <div className="relative aspect-[4/5] w-full overflow-hidden bg-card-2">
+          {cover ? (
+            <Image
+              src={publicUrl(cover.objectKey)}
+              alt={animal.name}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-cover"
+            />
+          ) : (
+            <ImagePlaceholder name={animal.name} />
           )}
-          {animal.color && <InfoRow label="Окрас" value={animal.color} />}
-        </dl>
-        <span className="mt-auto pt-2 text-sm font-medium text-accent">
-          Подробнее →
-        </span>
+          {photoCount > 1 ? (
+            <span className="absolute bottom-3 right-3 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
+              {photoCount} фото
+            </span>
+          ) : null}
+        </div>
+        <p className="polaroid-caption">{caption}</p>
       </div>
     </Link>
   );
@@ -119,20 +127,11 @@ export function AdultCard({ animal }: { animal: AnimalWithPhotos }) {
 
 function ImagePlaceholder({ name }: { name: string }) {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-card to-background">
-      <span className="text-5xl text-border" aria-hidden>
-        🐾
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-card-2">
+      <span className="font-display text-3xl tracking-[0.08em] text-accent/70">LB</span>
+      <span className="px-4 text-center text-sm text-muted">
+        {name}
       </span>
-      <span className="sr-only">{name}</span>
-    </div>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex gap-2">
-      <dt className="text-muted/70">{label}:</dt>
-      <dd className="text-foreground">{value}</dd>
     </div>
   );
 }

@@ -4,15 +4,17 @@ import { getAllAnimals } from "@/lib/animals";
 import { formatPrice } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
 import { AnimalRowActions } from "@/components/admin/AnimalRowActions";
+import { PublishedToggle } from "@/components/admin/PublishedToggle";
 import { publicUrl } from "@/lib/storage";
 import type { AnimalCategory } from "@prisma/client";
+import { getAllProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "Животные",
 };
 
 export default async function AdminPage() {
-  const animals = await getAllAnimals();
+  const [animals, products] = await Promise.all([getAllAnimals(), getAllProducts()]);
 
   const categories: { value: AnimalCategory; label: string }[] = [
     { value: "KITTEN", label: "Котята" },
@@ -94,15 +96,10 @@ export default async function AdminPage() {
                     </div>
 
                     <div className="mt-auto flex items-center justify-between border-t border-border pt-3">
-                      <span
-                        className={
-                          animal.published
-                            ? "text-xs font-medium text-green-500"
-                            : "text-xs text-muted"
-                        }
-                      >
-                        {animal.published ? "Опубликовано" : "Скрыто"}
-                      </span>
+                      <PublishedToggle
+                        animalId={animal.id}
+                        published={animal.published}
+                      />
                       <AnimalRowActions animalId={animal.id} />
                     </div>
                   </li>
@@ -112,6 +109,10 @@ export default async function AdminPage() {
           )}
         </section>
       ))}
+      <section className="mb-8 border-t border-border pt-8">
+        <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-medium uppercase tracking-wide text-muted">Лежанки и мебель ({products.length})</h2><Link href="/admin/products/new" className="rounded-md border border-accent px-3 py-1.5 text-sm text-accent">+ Добавить товар</Link></div>
+        {products.length === 0 ? <p className="rounded-md border border-border bg-card px-4 py-6 text-sm text-muted">Товаров пока нет</p> : <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{products.map((product) => <li key={product.id} className="border border-border bg-card p-4"><Link href={`/admin/products/${product.id}/edit`} className="font-medium text-foreground hover:text-accent">{product.category === "BED" ? "Лежанка" : "Мебель"} № {product.number}</Link><p className="mt-1 text-sm text-muted">Фото: {product.photos.length}</p><p className="mt-3 text-sm text-muted">{product.published ? "Опубликован" : "Черновик"}</p></li>)}</ul>}
+      </section>
     </div>
   );
 }

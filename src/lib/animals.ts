@@ -29,7 +29,17 @@ export async function getAnimalById(id: string) {
     where: { id },
     include: {
       photos: { orderBy: { sortOrder: "asc" } },
+      father: { include: { photos: { orderBy: { sortOrder: "asc" } } } },
+      mother: { include: { photos: { orderBy: { sortOrder: "asc" } } } },
     },
+  });
+}
+
+export async function getParentOptions() {
+  return prisma.animal.findMany({
+    where: { category: { in: ["MALE", "FEMALE"] } },
+    select: { id: true, name: true, category: true, published: true },
+    orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 }
 

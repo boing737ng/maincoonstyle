@@ -1,34 +1,37 @@
 "use client";
 
-import type { Animal, AnimalPhoto } from "@prisma/client";
-import { useRef, useState, useTransition } from "react";
+import type { Animal, AnimalPhoto, AnimalCategory } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   createAnimalAction,
   updateAnimalAction,
   type ActionResult,
 } from "@/app/admin/actions";
 import { CancelLink, ErrorMessage, Field, inputClass } from "@/components/admin/fields";
-import { ALLOWED_PHOTO_TYPES, MAX_PHOTOS_PER_ANIMAL } from "@/lib/shared";
+import { CustomSelect, type SelectOption } from "@/components/CustomSelect";
+import { ALLOWED_PHOTO_TYPES, MAX_PHOTOS_PER_ANIMAL, MAX_PHOTO_BYTES } from "@/lib/shared";
 
-const CATEGORIES = [
+const CATEGORIES: SelectOption[] = [
   { value: "KITTEN", label: "Котята" },
   { value: "MALE", label: "Коты" },
   { value: "FEMALE", label: "Кошки" },
-] as const;
+];
 
-const STATUSES = [
+const STATUSES: SelectOption[] = [
   { value: "AVAILABLE", label: "Свободен" },
   { value: "RESERVED", label: "Резерв" },
   { value: "SOLD", label: "Продан" },
-] as const;
+];
 
-const SEXES = [
+const SEXES: SelectOption[] = [
   { value: "", label: "Не указан" },
   { value: "Кот", label: "Кот" },
   { value: "Кошка", label: "Кошка" },
-] as const;
+];
 
-type AnimalWithPhotos = Animal & { photos: AnimalPhoto[] };
+type ParentOption = { id: string; name: string; category: AnimalCategory; published: boolean };
+type AnimalWithPhotos = Animal & { photos: AnimalPhoto[]; father?: Animal | null; mother?: Animal | null };
 
 function toDateInput(date: Date | null): string {
   if (!date) return "";
@@ -39,17 +42,35 @@ function toDateInput(date: Date | null): string {
   return `${y}-${m}-${day}`;
 }
 
-export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
+export function AnimalForm({ animal, parentOptions = [] }: { animal?: AnimalWithPhotos; parentOptions?: ParentOption[] }) {
   const isEdit = Boolean(animal);
   const serverAction = isEdit ? updateAnimalAction : createAnimalAction;
+  const router = useRouter();
 
   const [files, setFiles] = useState<File[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
   const [photoError, setPhotoError] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [pending, startTransition] = useTransition();
+  const [category, setCategory] = useState<string>(animal?.category ?? "KITTEN");
+  const [sex, setSex] = useState<string>(animal?.sex ?? "");
+  const [status, setStatus] = useState<string>(animal?.status ?? "AVAILABLE");
+  const fathers = parentOptions.filter(
+    (parent) => parent.category === "MALE" && parent.id !== animal?.id
+  );
+  const mothers = parentOptions.filter(
+    (parent) => parent.category === "FEMALE" && parent.id !== animal?.id
+  );
 
-  const formRef = useRef<HTMLFormElement>(null);
+  const previews = useMemo(
+    () => files.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [files]
+  );
+  useEffect(() => {
+    return () => {
+      previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [previews]);
 
   function handleFiles(list: FileList | null) {
     setPhotoError(undefined);
@@ -64,8 +85,8 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
         setPhotoError("Недопустимый тип файла");
         return;
       }
-      if (f.size > 10 * 1024 * 1024) {
-        setPhotoError("Файл больше 10 МБ");
+      if (f.size > MAX_PHOTO_BYTES) {
+        setPhotoError(`Файл больше ${Math.round(MAX_PHOTO_BYTES / (1024 * 1024))} МБ`);
         return;
       }
     }
@@ -73,9 +94,10 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
   }
 
   function removeFile(index: number) {
+    const remaining = files.length - 1;
     setFiles((prev) => prev.filter((_, i) => i !== index));
-    if (coverIndex >= files.length - 1) {
-      setCoverIndex(0);
+    if (coverIndex >= remaining) {
+      setCoverIndex(remaining > 0 ? remaining - 1 : 0);
     }
   }
 
@@ -90,15 +112,7 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
       formData.append("photos", file);
     });
 
-    if (files.length > 0) {
-      formData.append("coverIndex", String(coverIndex));
-    } else {
-      formData.append("coverIndex", "0");
-    }
-
-    if (files.length === 0) {
-      formData.append("coverIndex", "0");
-    }
+    formData.append("coverIndex", String(files.length > 0 ? coverIndex : 0));
 
     startTransition(async () => {
       const result = (await serverAction(
@@ -107,112 +121,116 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
       )) as ActionResult;
       if (!result.ok && result.error) {
         setError(result.error);
+      } else if (result.ok) {
+        router.push("/admin");
+        router.refresh();
       }
     });
   }
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       {isEdit ? <input type="hidden" name="id" value={animal!.id} /> : null}
       <ErrorMessage message={error ?? photoError} />
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Field label="Категория">
-          <select name="category" defaultValue={animal?.category ?? "KITTEN"} className={inputClass}>
-            {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </Field>
+      <fieldset className="rounded-lg border border-border bg-card p-4">
+        <SectionTitle>Основная информация</SectionTitle>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Категория">
+            <CustomSelect
+              value={category}
+              onChange={setCategory}
+              options={CATEGORIES}
+            />
+            <input type="hidden" name="category" value={category} />
+          </Field>
 
-        <Field label="Кличка">
-          <input name="name" required defaultValue={animal?.name ?? ""} className={inputClass} />
-        </Field>
+          <Field label="Кличка">
+            <input name="name" required defaultValue={animal?.name ?? ""} className={inputClass} />
+          </Field>
 
-        <Field label="Дата рождения">
-          <input
-            type="date"
-            name="birthDate"
-            defaultValue={toDateInput(animal?.birthDate ?? null)}
-            className={inputClass}
-          />
-        </Field>
+          <Field label="Дата рождения">
+            <input
+              type="date"
+              name="birthDate"
+              defaultValue={toDateInput(animal?.birthDate ?? null)}
+              className={inputClass}
+            />
+          </Field>
 
-        <Field label="Пол">
-          <select
-            name="sex"
-            defaultValue={animal?.sex ?? ""}
-            className={inputClass}
-          >
-            {SEXES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </Field>
+          <Field label="Пол">
+            {category === "KITTEN" ? (
+              <>
+                <CustomSelect value={sex} onChange={setSex} options={SEXES} />
+                <input type="hidden" name="sex" value={sex} />
+              </>
+            ) : (
+              <div className="flex h-10 items-center rounded-md border border-border bg-background px-3 text-sm text-muted">
+                {category === "MALE" ? "Кот" : "Кошка"}
+              </div>
+            )}
+          </Field>
 
-        <Field label="Окрас">
-          <input name="color" defaultValue={animal?.color ?? ""} className={inputClass} />
-        </Field>
+          <Field label="Окрас">
+            <input name="color" defaultValue={animal?.color ?? ""} className={inputClass} />
+          </Field>
 
-        <Field label="Цена (₽)">
-          <input
-            type="number"
-            name="price"
-            min={0}
-            defaultValue={animal?.price ?? ""}
-            className={inputClass}
-          />
-        </Field>
+          {category === "KITTEN" ? (
+            <Field label="Цена (₽)">
+              <input
+                type="number"
+                name="price"
+                min={0}
+                defaultValue={animal?.price ?? ""}
+                className={inputClass}
+              />
+            </Field>
+          ) : null}
 
-        <Field label="Статус">
-          <select name="status" defaultValue={animal?.status ?? "AVAILABLE"} className={inputClass}>
-            {STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
+          {category === "KITTEN" ? (
+            <Field label="Статус">
+              <CustomSelect value={status} onChange={setStatus} options={STATUSES} />
+              <input type="hidden" name="status" value={status} />
+            </Field>
+          ) : null}
+        </div>
+      </fieldset>
 
-      <Field label="Родители">
-        <input name="parents" defaultValue={animal?.parents ?? ""} className={inputClass} />
-      </Field>
+      <fieldset className="rounded-lg border border-border bg-card p-4">
+        <SectionTitle>Описание</SectionTitle>
+        <div className="space-y-4">
+          {category === "KITTEN" ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Отец">
+                <select name="fatherId" defaultValue={animal?.fatherId ?? ""} className={inputClass}>
+                  <option value="">Не указан</option>
+                  {fathers.map((father) => <option key={father.id} value={father.id}>{father.name}{father.published ? "" : " (не опубликован)"}</option>)}
+                </select>
+              </Field>
+              <Field label="Мать">
+                <select name="motherId" defaultValue={animal?.motherId ?? ""} className={inputClass}>
+                  <option value="">Не указана</option>
+                  {mothers.map((mother) => <option key={mother.id} value={mother.id}>{mother.name}{mother.published ? "" : " (не опубликована)"}</option>)}
+                </select>
+              </Field>
+            </div>
+          ) : null}
 
-      <Field label="Характер">
-        <textarea
-          name="personality"
-          rows={4}
-          defaultValue={animal?.personality ?? ""}
-          className={inputClass}
-        />
-      </Field>
+          {category === "KITTEN" ? (
+            <Field label="Характер">
+              <textarea
+                name="personality"
+                rows={4}
+                defaultValue={animal?.personality ?? ""}
+                className={inputClass}
+              />
+            </Field>
+          ) : null}
+        </div>
+      </fieldset>
 
-      <div className="rounded-lg border-2 border-accent/40 bg-accent/5 p-4">
-        <label className="flex cursor-pointer items-start gap-3">
-          <input
-            type="checkbox"
-            name="published"
-            defaultChecked={animal?.published ?? true}
-            className="mt-0.5 h-5 w-5 rounded border-border bg-card accent-[var(--accent)]"
-          />
-          <span>
-            <span className="block font-medium text-foreground">
-              Опубликовать на сайте
-            </span>
-            <span className="mt-0.5 block text-sm text-muted">
-              Если отключено — животное не будет видно посетителям.
-            </span>
-          </span>
-        </label>
-      </div>
-
-      <div className="rounded-lg border border-border bg-card p-4">
-        <p className="mb-2 text-sm font-medium">Фото (до {MAX_PHOTOS_PER_ANIMAL})</p>
+      <fieldset className="rounded-lg border border-border bg-card p-4">
+        <SectionTitle>Фото (до {MAX_PHOTOS_PER_ANIMAL})</SectionTitle>
         {photoError ? (
           <p className="mb-2 text-xs text-red-400">{photoError}</p>
         ) : null}
@@ -225,12 +243,12 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
         />
         {files.length > 0 ? (
           <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {files.map((file, i) => (
-              <li key={`${file.name}-${i}`} className="overflow-hidden rounded-md border border-border">
+            {previews.map((preview, i) => (
+              <li key={`${preview.file.name}-${i}`} className="overflow-hidden rounded-md border border-border">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={URL.createObjectURL(file)}
-                  alt={file.name}
+                  src={preview.url}
+                  alt={preview.file.name}
                   className="h-24 w-full object-cover"
                 />
                 <div className="flex items-center justify-between px-2 py-1 text-xs">
@@ -259,6 +277,26 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
         ) : (
           <p className="mt-3 text-xs text-muted">Фото ещё не выбраны</p>
         )}
+      </fieldset>
+
+      <div className="rounded-lg border-2 border-accent/40 bg-accent/5 p-4">
+        <SectionTitle>Публикация</SectionTitle>
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            name="published"
+            defaultChecked={animal?.published ?? true}
+            className="mt-0.5 h-5 w-5 rounded border-border bg-card accent-[var(--accent)]"
+          />
+          <span>
+            <span className="block font-medium text-foreground">
+              Опубликовать на сайте
+            </span>
+            <span className="mt-0.5 block text-sm text-muted">
+              Если отключено — животное не будет видно посетителям.
+            </span>
+          </span>
+        </label>
       </div>
 
       <div className="flex items-center gap-3">
@@ -272,5 +310,13 @@ export function AnimalForm({ animal }: { animal?: AnimalWithPhotos }) {
         <CancelLink />
       </div>
     </form>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-accent">
+      {children}
+    </h2>
   );
 }

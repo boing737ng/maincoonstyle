@@ -19,6 +19,11 @@ enum AnimalStatus {
   SOLD
 }
 
+enum ProductCategory {
+  BED
+  FURNITURE
+}
+
 model Animal {
   id            String         @id @default(cuid())
   category      AnimalCategory
@@ -28,8 +33,13 @@ model Animal {
   sex           String?
   color         String?
   price         Int?
-  parents       String?
   personality   String?
+  fatherId      String?
+  motherId      String?
+  father        Animal?        @relation("AnimalFather", fields: [fatherId], references: [id], onDelete: SetNull)
+  mother        Animal?        @relation("AnimalMother", fields: [motherId], references: [id], onDelete: SetNull)
+  fatherOf      Animal[]       @relation("AnimalFather")
+  motherOf      Animal[]       @relation("AnimalMother")
   status        AnimalStatus   @default(AVAILABLE)
   published     Boolean        @default(false)
   sortOrder     Int            @default(0)
@@ -39,6 +49,35 @@ model Animal {
 
   @@index([category, published])
   @@index([sortOrder])
+  @@index([fatherId])
+  @@index([motherId])
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  category    ProductCategory
+  number      String
+  published   Boolean         @default(false)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  photos      ProductPhoto[]
+
+  @@unique([category, number])
+  @@index([category, published])
+  @@index([sortOrder])
+}
+
+model ProductPhoto {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  objectKey String
+  sortOrder Int      @default(0)
+  isCover   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
 }
 
 model AnimalPhoto {

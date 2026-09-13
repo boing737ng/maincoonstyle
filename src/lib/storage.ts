@@ -3,6 +3,13 @@ import { Client } from "minio";
 import { randomUUID } from "node:crypto";
 import { publicUrl as buildPublicUrl } from "@/lib/shared";
 
+const ALLOWED_EXTENSIONS: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+};
+
 function getMinioClient(): Client {
   const endPoint = process.env.S3_ENDPOINT || "localhost";
   const port = Number(process.env.S3_PORT || 9000);
@@ -17,12 +24,20 @@ const BUCKET = process.env.S3_BUCKET || "meinkun-photos";
 
 export async function uploadPhoto(file: File): Promise<{ objectKey: string; url: string }> {
   const client = getMinioClient();
-  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+
+  // Only the basename, no paths: prevents traversal via crafted file names.
+  const baseName = file.name.split(/[\\/]/).pop() ?? "";
+  const ext = baseName.includes(".") ? baseName.split(".").pop()!.toLowerCase() : "";
+  const contentType = ALLOWED_EXTENSIONS[ext];
+  if (!contentType) {
+    throw new Error("Недопустимый тип файла");
+  }
+
   const objectKey = `animals/${randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   await client.putObject(BUCKET, objectKey, buffer, buffer.length, {
-    "Content-Type": file.type,
+    "Content-Type": contentType,
   });
 
   return { objectKey, url: buildPublicUrl(objectKey) };

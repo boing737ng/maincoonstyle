@@ -1,24 +1,50 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useTransition } from "react";
+import { CustomSelect, type SelectOption } from "@/components/CustomSelect";
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: SelectOption[] = [
   { value: "", label: "Любой статус" },
   { value: "AVAILABLE", label: "Свободен" },
   { value: "RESERVED", label: "Резерв" },
   { value: "SOLD", label: "Продан" },
 ];
 
-const SORT_OPTIONS = [
+const SORT_OPTIONS: SelectOption[] = [
   { value: "sortOrder", label: "По порядку" },
   { value: "price-asc", label: "Сначала дешевле" },
   { value: "price-desc", label: "Сначала дороже" },
   { value: "newest", label: "Сначала новорождённые" },
 ];
 
-const inputClass =
-  "w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent";
+function FilterSelect({
+  label,
+  value,
+  options,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: SelectOption[];
+  placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <span className="mb-2 block text-sm font-medium text-muted">
+        {label}
+      </span>
+      <CustomSelect
+        value={value}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
 
 export function KittenFilters({
   sexes,
@@ -29,6 +55,22 @@ export function KittenFilters({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  const sexOptions: SelectOption[] = [
+    { value: "", label: "Любой пол" },
+    ...sexes.map((s) => ({ value: s, label: s })),
+  ];
+  const colorOptions: SelectOption[] = [
+    { value: "", label: "Любой окрас" },
+    ...colors.map((c) => ({ value: c, label: c })),
+  ];
+
+  const hasFilters =
+    searchParams.get("sex") ||
+    searchParams.get("color") ||
+    searchParams.get("status") ||
+    searchParams.get("sort");
 
   const update = useCallback(
     (key: string, value: string) => {
@@ -38,82 +80,67 @@ export function KittenFilters({
       } else {
         params.delete(key);
       }
-      router.push(`/kittens?${params.toString()}`, { scroll: false });
+      startTransition(() => {
+        router.push(`/kittens?${params.toString()}`, { scroll: false });
+      });
     },
     [router, searchParams]
   );
 
+  const reset = useCallback(() => {
+    startTransition(() => {
+      router.push("/kittens", { scroll: false });
+    });
+  }, [router]);
+
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <label className="block">
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
-          Пол
-        </span>
-        <select
+    <div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <FilterSelect
+          label="Пол"
           value={searchParams.get("sex") ?? ""}
-          onChange={(e) => update("sex", e.target.value)}
-          className={inputClass}
-        >
-          <option value="">Любой пол</option>
-          {sexes.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="block">
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
-          Окрас
-        </span>
-        <select
+          options={sexOptions}
+          placeholder="Любой пол"
+          onChange={(v) => update("sex", v)}
+        />
+        <FilterSelect
+          label="Окрас"
           value={searchParams.get("color") ?? ""}
-          onChange={(e) => update("color", e.target.value)}
-          className={inputClass}
-        >
-          <option value="">Любой окрас</option>
-          {colors.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="block">
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
-          Статус
-        </span>
-        <select
+          options={colorOptions}
+          placeholder="Любой окрас"
+          onChange={(v) => update("color", v)}
+        />
+        <FilterSelect
+          label="Статус"
           value={searchParams.get("status") ?? ""}
-          onChange={(e) => update("status", e.target.value)}
-          className={inputClass}
-        >
-          {STATUS_OPTIONS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="block">
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
-          Сортировка
-        </span>
-        <select
+          options={STATUS_OPTIONS}
+          placeholder="Любой статус"
+          onChange={(v) => update("status", v)}
+        />
+        <FilterSelect
+          label="Сортировка"
           value={searchParams.get("sort") ?? "sortOrder"}
-          onChange={(e) => update("sort", e.target.value)}
-          className={inputClass}
+          options={SORT_OPTIONS}
+          placeholder="По порядку"
+          onChange={(v) => update("sort", v)}
+        />
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={reset}
+          disabled={!hasFilters}
+          className="text-sm text-muted transition-colors hover:text-amber-soft disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {SORT_OPTIONS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          Сбросить фильтры
+        </button>
+        {isPending && (
+          <span className="text-sm text-muted" aria-live="polite">
+            Обновление…
+          </span>
+        )}
+      </div>
     </div>
   );
 }
