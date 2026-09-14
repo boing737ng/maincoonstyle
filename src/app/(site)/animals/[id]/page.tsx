@@ -78,6 +78,11 @@ export default async function AnimalPage({
               <span className="text-muted"> {animal.color}</span>
             ) : null}
           </p>
+          {animal.birthDate ? (
+            <p className="mt-2 text-center text-sm text-muted">
+              Дата рождения: {formatDate(animal.birthDate)}
+            </p>
+          ) : null}
         </div>
       </div>
     );
@@ -117,6 +122,9 @@ export default async function AnimalPage({
 
           <dl className="divide-y divide-border border-y border-border">
             <DetailRow label="Пол" value={sexLabel(animal.sex)} />
+            {animal.number && (
+              <DetailRow label="Номер" value={`№ ${animal.number}`} />
+            )}
             {animal.birthDate && (
               <DetailRow label="Дата рождения" value={formatDate(animal.birthDate)} />
             )}
@@ -124,7 +132,7 @@ export default async function AnimalPage({
             {animal.price != null && (
               <div className="flex items-center justify-between gap-4 py-4">
                 <dt className="text-sm text-muted-strong">Цена</dt>
-                <dd className="text-right font-display text-2xl text-amber">
+                <dd className="text-right font-display text-3xl text-amber">
                   {formatPrice(animal.price)}
                 </dd>
               </div>

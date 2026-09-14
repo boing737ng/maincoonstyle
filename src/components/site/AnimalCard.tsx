@@ -2,9 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Animal, AnimalPhoto } from "@prisma/client";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatDate } from "@/lib/format";
 import { publicUrl } from "@/lib/shared";
 import { cn } from "@/lib/cn";
+import { PawIcon } from "@/components/site/icons";
 
 type AnimalWithPhotos = Animal & { photos: AnimalPhoto[] };
 
@@ -54,6 +55,12 @@ export function KittenCard({
           <span className="absolute left-3 top-3">
             <StatusBadge status={animal.status} />
           </span>
+          {animal.number ? (
+            <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+              <PawIcon className="h-3.5 w-3.5 text-amber-soft" />
+              № {animal.number}
+            </span>
+          ) : null}
           {photoCount > 1 ? (
             <span className="absolute bottom-3 right-3 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
               {photoCount} фото
@@ -120,6 +127,11 @@ export function AdultCard({
           ) : null}
         </div>
         <p className="polaroid-caption">{caption}</p>
+        {animal.birthDate ? (
+          <p className="px-4 pb-4 pt-0 text-sm text-muted">
+            Дата рождения: {formatDate(animal.birthDate)}
+          </p>
+        ) : null}
       </div>
     </Link>
   );

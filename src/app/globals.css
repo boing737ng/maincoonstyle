@@ -12,10 +12,6 @@
   --accent: #c99562;
   --accent-hover: #d9a875;
   --accent-foreground: #201b16;
-  --amber: #c99562;
-  --amber-soft: #d9a875;
-  --paper: #eeeae3;
-  --paper-ink: #201b16;
 }
 
 @theme inline {
@@ -29,12 +25,13 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-foreground: var(--accent-foreground);
-  --color-amber: var(--amber);
-  --color-amber-soft: var(--amber-soft);
-  --color-paper: var(--paper);
-  --color-paper-ink: var(--paper-ink);
+  --color-amber: var(--accent);
+  --color-amber-soft: var(--accent-hover);
+  --color-paper: var(--foreground);
+  --color-paper-ink: var(--accent-foreground);
   --font-display: var(--font-prata), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-nunito), "Segoe UI", Arial, sans-serif;
+  --font-hand: var(--font-caveat), "Segoe Script", cursive;
 }
 
 html {

@@ -1,6 +1,6 @@
 import { getPublishedAnimals } from "@/lib/animals";
 import { AdultGrid } from "@/components/site/AnimalGrids";
-import { PageHeader, Section } from "@/components/site/Section";
+import { PageHeader } from "@/components/site/Section";
 import type { AnimalCategory } from "@prisma/client";
 
 export async function AdultCategoryPage({
@@ -20,9 +20,11 @@ export async function AdultCategoryPage({
   return (
     <>
       <PageHeader eyebrow={eyebrow} title={title} />
-      <Section id={id} title={title}>
-        <AdultGrid animals={animals} emptyText={emptyText} />
-      </Section>
+      <section id={id} className="scroll-mt-24 py-14 sm:py-16">
+        <div className="container-site">
+          <AdultGrid animals={animals} emptyText={emptyText} />
+        </div>
+      </section>
     </>
   );
 }

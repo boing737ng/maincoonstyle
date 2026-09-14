@@ -42,29 +42,35 @@ export default function ContactsPage() {
           </a>
         </div>
 
-        <div className="mt-6 max-w-4xl">
-          <p className="mb-3 text-sm font-medium text-muted">
-            соцсети
-          </p>
-          <div className="flex flex-wrap gap-6">
-            <a
-              href={site.facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-lg text-foreground underline decoration-dashed decoration-border underline-offset-8 transition-colors hover:text-amber-soft hover:decoration-amber-soft"
-            >
-              Facebook
-            </a>
-            <a
-              href={site.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-lg text-foreground underline decoration-dashed decoration-border underline-offset-8 transition-colors hover:text-amber-soft hover:decoration-amber-soft"
-            >
-              Instagram
-            </a>
+        {site.facebook || site.instagram ? (
+          <div className="mt-6 max-w-4xl">
+            <p className="mb-3 text-sm font-medium text-muted">
+              соцсети
+            </p>
+            <div className="flex flex-wrap gap-6">
+              {site.facebook ? (
+                <a
+                  href={site.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lg text-foreground underline decoration-dashed decoration-border underline-offset-8 transition-colors hover:text-amber-soft hover:decoration-amber-soft"
+                >
+                  Facebook
+                </a>
+              ) : null}
+              {site.instagram ? (
+                <a
+                  href={site.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-lg text-foreground underline decoration-dashed decoration-border underline-offset-8 transition-colors hover:text-amber-soft hover:decoration-amber-soft"
+                >
+                  Instagram
+                </a>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <p className="mt-10 max-w-xl text-lg leading-relaxed text-muted">
           Позвоните или напишите нам — с радостью ответим на все вопросы о

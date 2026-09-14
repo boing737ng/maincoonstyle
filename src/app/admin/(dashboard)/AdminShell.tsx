@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { logoutAction } from "@/app/admin/actions";
 
 export default async function AdminShell({
@@ -8,10 +9,30 @@ export default async function AdminShell({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-card">
-        <div className="container-site flex h-16 items-center justify-between">
-          <a href="/admin" className="text-lg font-semibold tracking-tight">
-            <span className="text-accent">Maincoon</span> Style — админ-панель
-          </a>
+        <div className="container-site flex h-16 items-center justify-between gap-4">
+          <div className="flex items-center gap-5">
+            <a
+              href="/admin"
+              className="text-lg font-semibold tracking-tight whitespace-nowrap"
+            >
+              <span className="font-hand text-accent">LargeBrush</span> — админ-
+              панель
+            </a>
+            <nav className="hidden items-center gap-4 text-sm sm:flex">
+              <Link
+                href="/admin"
+                className="text-muted transition-colors hover:text-accent"
+              >
+                Животные и товары
+              </Link>
+              <Link
+                href="/admin/orders"
+                className="text-muted transition-colors hover:text-accent"
+              >
+                Заявки
+              </Link>
+            </nav>
+          </div>
           <form action={logoutAction}>
             <button
               type="submit"

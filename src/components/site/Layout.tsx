@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
+import { CartButton } from "@/components/site/cart/CartButton";
 
 export const NAV_LINKS = [
   { href: "/", label: "Главная" },
@@ -19,9 +20,15 @@ export const NAV_LINKS = [
 function SiteName({ siteName, className }: { siteName: string; className?: string }) {
   const [first, ...rest] = siteName.split(" ");
   return (
-      <span className={className}>
-       <span>{first}</span>
-      {rest.length > 0 ? ` ${rest.join(" ")}` : ""}
+    <span className={cn("inline-flex items-baseline gap-2", className)}>
+      <span className="font-hand text-[1.5em] leading-none text-accent">
+        {first}
+      </span>
+      {rest.length > 0 ? (
+        <span className="font-display text-[0.62em] uppercase tracking-[0.32em] text-foreground">
+          {rest.join(" ")}
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -101,6 +108,8 @@ export function Header({
         >
           {phoneDisplay}
         </a>
+
+        <CartButton />
 
         <button
           type="button"

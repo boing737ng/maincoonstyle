@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getSiteData } from "@/lib/constants";
 import { Header, Footer, CallBar } from "@/components/site/Layout";
+import { CartDrawer } from "@/components/site/cart/CartDrawer";
 
 export default async function SiteLayout({
   children,
@@ -24,6 +25,7 @@ export default async function SiteLayout({
         email={site.email}
       />
       <CallBar phoneDisplay={site.phoneDisplay} phoneTel={site.phoneTel} />
+      <CartDrawer />
     </div>
   );
 }

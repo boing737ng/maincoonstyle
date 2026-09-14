@@ -4,6 +4,7 @@ import { PageHeader, Section } from "@/components/site/Section";
 import { getPublishedProducts } from "@/lib/products";
 import { publicUrl } from "@/lib/shared";
 import { CheckIcon, StarIcon } from "@/components/site/icons";
+import { AddToCartButton } from "@/components/site/cart/AddToCartButton";
 
 export const metadata: Metadata = {
   title: "Лежанки, Мебель",
@@ -99,6 +100,7 @@ export default async function FurniturePage() {
                     <p className="px-1 pt-3 font-display text-xl leading-none text-foreground/90 transition-colors group-hover:text-accent-hover">
                       {label}
                     </p>
+                    <AddToCartButton productId={product.id} label={label} />
                   </article>
                 );
               })}

@@ -99,3 +99,21 @@ model AdminUser {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+enum OrderStatus {
+  NEW
+  DONE
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  customerName String
+  phone        String
+  comment      String?
+  itemsJson    String
+  status       OrderStatus @default(NEW)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([status])
+}

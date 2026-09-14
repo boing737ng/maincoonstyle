@@ -585,6 +585,50 @@ export async function togglePublishedAction(
   return { ok: true };
 }
 
+export async function toggleOrderStatusAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const id = formData.get("id");
+  if (typeof id !== "string" || !id) {
+    return { ok: false, error: "Не указан идентификатор" };
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id },
+    select: { status: true },
+  });
+  if (!order) {
+    return { ok: false, error: "Заявка не найдена" };
+  }
+
+  await prisma.order.update({
+    where: { id },
+    data: { status: order.status === "NEW" ? "DONE" : "NEW" },
+  });
+
+  revalidatePath("/admin/orders");
+  return { ok: true };
+}
+
+export async function deleteOrderAction(
+  _prev: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  await requireAdmin();
+
+  const id = formData.get("id");
+  if (typeof id !== "string" || !id) {
+    return { ok: false, error: "Не указан идентификатор" };
+  }
+
+  await prisma.order.delete({ where: { id } });
+  revalidatePath("/admin/orders");
+  return { ok: true };
+}
+
 export async function movePhotoAction(
   _prev: ActionResult,
   formData: FormData
