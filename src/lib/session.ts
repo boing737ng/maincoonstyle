@@ -20,6 +20,13 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
+function isSecureCookie(): boolean {
+  const override = process.env.AUTH_COOKIE_SECURE;
+  if (override === "true") return true;
+  if (override === "false") return false;
+  return process.env.NODE_ENV === "production";
+}
+
 export async function createSession(adminId: string) {
   const token = await new SignJWT({ adminId })
     .setProtectedHeader({ alg: "HS256" })
@@ -28,7 +35,7 @@ export async function createSession(adminId: string) {
     .sign(getSecret());
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecureCookie(),
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
