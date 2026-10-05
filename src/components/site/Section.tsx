@@ -10,15 +10,15 @@ export function PageHeader({
   eyebrow?: string;
 }) {
   return (
-    <div className="relative overflow-hidden border-b border-border">
-      <div className="container-site py-12 sm:py-16">
+    <div className="relative overflow-hidden border-b border-border bg-card/40">
+      <div className="container-site py-14 sm:py-20">
         <div className="max-w-3xl">
           {eyebrow && (
-            <p className="mb-3 text-sm font-medium tracking-[0.08em] text-accent-hover">
+            <p className="mb-4 text-xs font-semibold tracking-[0.14em] text-accent-hover uppercase">
               {eyebrow}
             </p>
           )}
-          <h1 className="text-3xl leading-[1.15] text-foreground sm:text-4xl md:text-5xl">
+          <h1 className="max-w-2xl text-4xl leading-[1.04] text-foreground sm:text-5xl md:text-6xl">
             {title}
           </h1>
           {subtitle && (
@@ -46,15 +46,15 @@ export function Section({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 py-14 sm:py-16">
+    <section id={id} className="scroll-mt-24 py-16 sm:py-20">
       <div className="container-site">
         <div className="mb-10 max-w-3xl">
           {eyebrow && (
-            <p className="mb-3 text-sm font-medium tracking-[0.08em] text-accent-hover">
+            <p className="mb-4 text-xs font-semibold tracking-[0.14em] text-accent-hover uppercase">
               {eyebrow}
             </p>
           )}
-          <h2 className="text-3xl leading-tight text-foreground sm:text-4xl">
+          <h2 className="max-w-2xl text-3xl leading-[1.08] text-foreground sm:text-4xl md:text-5xl">
             {title}
           </h2>
           {subtitle && (

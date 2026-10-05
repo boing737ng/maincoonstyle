@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Prata, Nunito_Sans, Caveat } from "next/font/google";
+import { Caveat, Cormorant_Garamond, Manrope } from "next/font/google";
 import { getSiteData } from "@/lib/constants";
 import "./globals.css";
 
-const prata = Prata({
+const cormorant = Cormorant_Garamond({
   subsets: ["latin", "cyrillic"],
-  weight: "400",
+  weight: ["400", "500"],
   variable: "--font-prata",
   display: "swap",
 });
 
-const nunito = Nunito_Sans({
+const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
   variable: "--font-nunito",
   display: "swap",
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="ru"
-      className={`h-full antialiased ${prata.variable} ${nunito.variable} ${caveat.variable}`}
+      className={`h-full antialiased ${cormorant.variable} ${manrope.variable} ${caveat.variable}`}
     >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>

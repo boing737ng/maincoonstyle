@@ -35,6 +35,17 @@ export async function getAnimalById(id: string) {
   });
 }
 
+export async function getPublishedAnimalById(id: string) {
+  return prisma.animal.findFirst({
+    where: { id, published: true },
+    include: {
+      photos: { orderBy: { sortOrder: "asc" } },
+      father: { include: { photos: { orderBy: { sortOrder: "asc" } } } },
+      mother: { include: { photos: { orderBy: { sortOrder: "asc" } } } },
+    },
+  });
+}
+
 export async function getParentOptions() {
   return prisma.animal.findMany({
     where: { category: { in: ["MALE", "FEMALE"] } },

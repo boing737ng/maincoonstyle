@@ -34,7 +34,7 @@ export function KittenCard({
   return (
     <Link
       href={`/animals/${animal.id}`}
-      className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="group block cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background"
     >
       <div className="photo-frame polaroid relative">
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-card-2">
@@ -56,13 +56,13 @@ export function KittenCard({
             <StatusBadge status={animal.status} />
           </span>
           {animal.number ? (
-            <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+            <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-sm border border-white/20 bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur-sm">
               <PawIcon className="h-3.5 w-3.5 text-amber-soft" />
               № {animal.number}
             </span>
           ) : null}
           {photoCount > 1 ? (
-            <span className="absolute bottom-3 right-3 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
+            <span className="absolute bottom-3 right-3 rounded-sm border border-white/20 bg-black/60 px-2 py-1 text-xs tabular-nums text-white backdrop-blur-sm">
               {photoCount} фото
             </span>
           ) : null}
@@ -105,7 +105,7 @@ export function AdultCard({
   return (
     <Link
       href={`/animals/${animal.id}`}
-      className="group block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      className="group block cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background"
     >
       <div className="photo-frame polaroid relative">
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-card-2">
@@ -121,7 +121,7 @@ export function AdultCard({
             <ImagePlaceholder name={animal.name} />
           )}
           {photoCount > 1 ? (
-            <span className="absolute bottom-3 right-3 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
+            <span className="absolute bottom-3 right-3 rounded-sm border border-white/20 bg-black/60 px-2 py-1 text-xs tabular-nums text-white backdrop-blur-sm">
               {photoCount} фото
             </span>
           ) : null}

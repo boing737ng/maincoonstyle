@@ -35,7 +35,7 @@ export async function placeOrderAction(
     orderBy: [{ category: "asc" }, { number: "asc" }],
   });
 
-  if (products.length === 0) {
+  if (products.length !== uniqueIds.length) {
     return { ok: false, error: "Изделия не найдены. Обновите корзину." };
   }
 

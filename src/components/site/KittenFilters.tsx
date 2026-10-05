@@ -41,6 +41,7 @@ function FilterSelect({
         onChange={onChange}
         options={options}
         placeholder={placeholder}
+        ariaLabel={label}
       />
     </div>
   );

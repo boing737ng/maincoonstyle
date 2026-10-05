@@ -5,8 +5,12 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  const login = process.env.ADMIN_LOGIN || "admin";
-  const password = process.env.ADMIN_PASSWORD || "change-me";
+  const login = process.env.ADMIN_LOGIN;
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!login || !password) {
+    throw new Error("ADMIN_LOGIN and ADMIN_PASSWORD must be set before seeding");
+  }
 
   const existing = await prisma.adminUser.findUnique({ where: { login } });
   if (!existing) {

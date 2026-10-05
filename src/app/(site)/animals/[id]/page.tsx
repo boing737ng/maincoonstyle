@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAnimalById, getKittens } from "@/lib/animals";
+import { getKittens, getPublishedAnimalById } from "@/lib/animals";
 import { getSiteData } from "@/lib/constants";
 import { formatPrice, formatDate } from "@/lib/format";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -21,7 +21,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const animal = await getAnimalById(id);
+  const animal = await getPublishedAnimalById(id);
   if (!animal) return { title: "Животное не найдено" };
   return { title: animal.name };
 }
@@ -38,7 +38,7 @@ export default async function AnimalPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const animal = await getAnimalById(id);
+  const animal = await getPublishedAnimalById(id);
   if (!animal) notFound();
 
   const site = getSiteData();

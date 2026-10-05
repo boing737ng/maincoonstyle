@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import Link from "next/link";
 import { placeOrderAction } from "@/app/(site)/furniture/actions";
 import { clearCart, removeFromCart, useCart } from "./cart-store";
@@ -14,9 +14,13 @@ export function CartDrawer() {
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [pending, startTransition] = useTransition();
+  const drawerRef = useRef<HTMLElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function onOpen() {
+      openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       setOpen(true);
     }
     window.addEventListener("largebrush-cart-open", onOpen);
@@ -25,8 +29,31 @@ export function CartDrawer() {
 
   useEffect(() => {
     if (!open) return;
+    closeButtonRef.current?.focus();
+
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        if (sent) setSent(false);
+        requestAnimationFrame(() => openerRef.current?.focus());
+        return;
+      }
+      if (event.key !== "Tab" || !drawerRef.current) return;
+
+      const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled])'
+      );
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
     document.addEventListener("keydown", onKeyDown);
     document.body.style.overflow = "hidden";
@@ -34,11 +61,12 @@ export function CartDrawer() {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, sent]);
 
   function close() {
     setOpen(false);
     if (sent) setSent(false);
+    requestAnimationFrame(() => openerRef.current?.focus());
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -75,8 +103,10 @@ export function CartDrawer() {
         }`}
       />
       <aside
+        ref={drawerRef}
         role="dialog"
         aria-label="Корзина"
+        aria-modal="true"
         className={`absolute inset-y-0 right-0 flex w-full max-w-md flex-col border-l border-border bg-background shadow-2xl transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
@@ -85,6 +115,7 @@ export function CartDrawer() {
           <h2 className="font-display text-xl text-foreground">Корзина</h2>
           <button
             type="button"
+            ref={closeButtonRef}
             onClick={close}
             aria-label="Закрыть корзину"
             className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted transition-colors hover:border-accent hover:text-accent-hover"
@@ -176,34 +207,40 @@ export function CartDrawer() {
               <p className="text-sm leading-relaxed text-muted">
                 Оставьте контакты — мы свяжемся с вами, чтобы подтвердить заказ.
               </p>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">Ваше имя</span>
               <input
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Ваше имя"
                 required
                 minLength={2}
                 maxLength={120}
-                className="h-11 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted-strong focus:border-accent focus:outline-none"
+                className="h-11 w-full rounded-sm border border-border bg-card px-3 text-sm text-foreground focus:border-accent focus:outline-none"
               />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">Телефон</span>
               <input
                 type="tel"
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
-                placeholder="Телефон"
                 required
                 minLength={6}
                 maxLength={40}
-                className="h-11 w-full rounded-md border border-border bg-card px-3 text-sm text-foreground placeholder:text-muted-strong focus:border-accent focus:outline-none"
+                className="h-11 w-full rounded-sm border border-border bg-card px-3 text-sm text-foreground focus:border-accent focus:outline-none"
               />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-foreground">Комментарий <span className="text-muted">(необязательно)</span></span>
               <textarea
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
-                placeholder="Комментарий (необязательно)"
                 rows={2}
                 maxLength={2000}
-                className="w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-strong focus:border-accent focus:outline-none"
+                className="w-full resize-none rounded-sm border border-border bg-card px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
               />
+              </label>
               {error ? (
                 <p className="text-sm text-red-400">{error}</p>
               ) : null}

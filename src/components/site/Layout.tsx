@@ -74,12 +74,12 @@ export function Header({
   return (
     <header
       ref={menuRef}
-      className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur"
+      className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur"
     >
       <div className="container-site flex h-16 items-center justify-between gap-4">
         <Link
           href="/"
-          className="font-display text-xl tracking-[0.02em] text-foreground"
+          className="font-display text-xl tracking-[0.01em] text-foreground"
         >
           <SiteName siteName={siteName} />
         </Link>
@@ -181,7 +181,7 @@ export function CallBar({
   return (
     <a
       href={`tel:${phoneTel}`}
-      className="fixed inset-x-3 bottom-3 z-50 flex h-14 items-center justify-center gap-2 rounded-lg border border-accent/50 bg-card text-base font-semibold text-foreground shadow-[0_12px_32px_rgb(0_0_0_/_0.35)] transition-colors hover:border-accent hover:text-accent-hover sm:hidden"
+      className="fixed inset-x-3 bottom-3 z-50 flex h-14 items-center justify-center gap-2 rounded-sm border border-accent/50 bg-card text-base font-semibold text-foreground shadow-[0_10px_24px_rgb(45_48_41_/_0.12)] transition-colors hover:border-accent hover:text-accent-hover sm:hidden"
     >
       Позвонить: {phoneDisplay}
     </a>

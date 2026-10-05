@@ -69,7 +69,7 @@ function Hero({
   const withPhoto = hasHeroImage();
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-border">
+    <section className="hero relative isolate overflow-hidden border-b border-border">
       {withPhoto ? (
         <Image
           src={`/${HERO_IMAGE}`}
@@ -83,23 +83,24 @@ function Hero({
         <HeroScenery />
       )}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/55 to-background"
+        className="hero-overlay absolute inset-0"
         aria-hidden
       />
 
-      <div className="container-site relative flex flex-col items-center py-20 text-center md:py-28">
-        <p className="text-sm font-medium tracking-[0.35em] text-accent-hover uppercase">
+      <div className="container-site relative grid min-h-[34rem] items-center gap-12 py-16 md:min-h-[39rem] md:grid-cols-[1.05fr_.95fr] md:py-20">
+        <div className="hero-copy max-w-xl">
+        <p className="hero-kicker text-sm font-medium tracking-[0.24em] text-accent-hover uppercase">
           питомник кошек мейн-кун
         </p>
-        <h1 className="mt-4 flex flex-col items-center gap-1">
-          <span className="font-hand text-6xl leading-none text-accent sm:text-7xl md:text-8xl">
+        <h1 className="mt-5 flex flex-col gap-1">
+          <span className="font-hand text-7xl leading-none text-accent sm:text-8xl md:text-9xl">
             {scriptName}
           </span>
-          <span className="text-2xl tracking-[0.18em] text-foreground sm:text-3xl md:text-4xl">
+          <span className="font-display text-4xl tracking-[0.08em] text-foreground sm:text-5xl md:text-6xl">
             {capsName}
           </span>
         </h1>
-        <p className="mt-6 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+        <p className="mt-7 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
           Дом больших кошек, где каждый мейн-кун растёт рядом с людьми, в заботе,
           спокойствии и любви.
         </p>
@@ -112,27 +113,33 @@ function Hero({
             Связаться с нами
           </a>
         </div>
+        </div>
+        <div className="hero-note hidden self-end justify-self-end border-l border-accent/50 pl-5 text-sm leading-relaxed text-muted md:block">
+          <span className="mb-2 block font-display text-2xl text-foreground">Жить рядом.</span>
+          Растить с вниманием к характеру,<br />здоровью и домашнему ритму.
+        </div>
       </div>
     </section>
   );
 }
 
-/* Вечерняя сцена «озеро на закате» — временная до присылки фирменного арта. */
+/* Спокойная графическая сцена остаётся нейтральной, пока нет hero-фотографии. */
 function HeroScenery() {
   return (
     <div className="absolute inset-0" aria-hidden>
-      <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_115%,#3d2b1c_0%,#241a13_45%,#141210_100%)]" />
-      <div className="absolute left-1/2 top-[62%] h-56 w-[46rem] max-w-[92vw] -translate-x-1/2 rounded-[100%] bg-accent/15 blur-3xl" />
-      <div className="absolute left-1/2 top-[68%] h-24 w-[30rem] max-w-[80vw] -translate-x-1/2 rounded-[100%] bg-[#e8b06d]/20 blur-2xl" />
+      <div className="absolute inset-0 bg-[#e8eee7]" />
+      <div className="absolute -right-24 top-10 h-80 w-80 rounded-full border border-accent/25" />
+      <div className="absolute -right-8 top-24 h-64 w-64 rounded-full border border-accent/20" />
+      <div className="absolute bottom-0 left-0 h-1/3 w-full bg-[#d8ddd2]" />
       <svg
-        className="absolute inset-x-0 bottom-0 h-40 w-full text-[#100e0c]"
+        className="absolute inset-x-0 bottom-0 h-40 w-full text-[#c2cdbd]"
         viewBox="0 0 1440 160"
         preserveAspectRatio="none"
       >
         <path
           d="M0 96 L90 60 L150 92 L230 44 L310 88 L400 52 L480 90 L560 40 L640 84 L720 56 L800 92 L890 48 L970 86 L1060 54 L1140 90 L1230 46 L1310 88 L1390 60 L1440 84 L1440 160 L0 160 Z"
           fill="currentColor"
-          opacity="0.85"
+          opacity="0.9"
         />
       </svg>
     </div>

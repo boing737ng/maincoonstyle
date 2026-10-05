@@ -12,6 +12,7 @@ export function CustomSelect({
   placeholder,
   className,
   buttonClassName,
+  ariaLabel,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -19,6 +20,7 @@ export function CustomSelect({
   placeholder?: string;
   className?: string;
   buttonClassName?: string;
+  ariaLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -48,8 +50,9 @@ export function CustomSelect({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-haspopup="listbox"
+        aria-haspopup="true"
         aria-expanded={open}
+        aria-label={ariaLabel}
         className={cn(
           "flex w-full items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors hover:border-accent/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent",
           buttonClassName
@@ -78,14 +81,11 @@ export function CustomSelect({
       </button>
 
       {open && (
-        <ul
-          role="listbox"
-          className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-md border border-border bg-card p-1 shadow-lg"
-        >
+        <ul className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-md border border-border bg-card p-1 shadow-lg">
           {options.map((option) => {
             const isSelected = option.value === value;
             return (
-              <li key={option.value} role="option" aria-selected={isSelected}>
+              <li key={option.value}>
                 <button
                   type="button"
                   onClick={() => {
