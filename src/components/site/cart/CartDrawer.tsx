@@ -167,7 +167,7 @@ export function CartDrawer() {
               Корзина пока пуста. Загляните в наш каталог изделий ручной работы!
             </p>
             <Link href="/furniture" onClick={close} className="btn btn-solid">
-              Лежанки, Мебель
+              Лежанки и мебель
             </Link>
           </div>
         ) : (
@@ -242,7 +242,7 @@ export function CartDrawer() {
               />
               </label>
               {error ? (
-                <p className="text-sm text-red-400">{error}</p>
+                <p className="text-sm font-medium text-red-700">{error}</p>
               ) : null}
               <button
                 type="submit"

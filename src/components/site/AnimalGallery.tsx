@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { AnimalPhoto } from "@prisma/client";
 import { publicUrl } from "@/lib/shared";
 import { cn } from "@/lib/cn";
+import { PawIcon } from "@/components/site/icons";
 
 export function AnimalGallery({
   photos,
@@ -51,7 +52,12 @@ export function AnimalGallery({
 
   if (total === 0) {
     return (
-      <div className="stitch flex aspect-square w-full items-center justify-center bg-card/40" />
+      <div className="stitch flex aspect-square w-full flex-col items-center justify-center gap-3 bg-card/40">
+        <PawIcon className="h-8 w-8 text-accent/50" />
+        <span className="px-6 text-center text-sm text-muted">
+          Фотографии скоро появятся
+        </span>
+      </div>
     );
   }
 
@@ -152,7 +158,7 @@ export function AnimalGallery({
             >
               ✕
             </button>
-            <span className="mt-3 block text-center text-sm text-muted">
+            <span className="mt-3 block text-center text-sm text-accent-foreground/80">
               {Math.min(active, total - 1) + 1} / {total}
             </span>
           </div>

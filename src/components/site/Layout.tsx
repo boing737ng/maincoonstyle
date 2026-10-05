@@ -13,7 +13,7 @@ export const NAV_LINKS = [
   { href: "/kittens", label: "Котята" },
   { href: "/cats", label: "Коты" },
   { href: "/females", label: "Кошки" },
-  { href: "/furniture", label: "Лежанки, Мебель" },
+  { href: "/furniture", label: "Лежанки и мебель" },
   { href: "/contacts", label: "Контакты" },
 ];
 

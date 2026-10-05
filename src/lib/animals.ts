@@ -73,11 +73,11 @@ export async function getKittens(filters: KittenFilters = {}) {
   const orderBy: Prisma.AnimalOrderByWithRelationInput[] = (() => {
     switch (filters.sort) {
       case "price-asc":
-        return [{ price: "asc" }];
+        return [{ price: { sort: "asc", nulls: "last" } }];
       case "price-desc":
-        return [{ price: "desc" }];
+        return [{ price: { sort: "desc", nulls: "last" } }];
       case "newest":
-        return [{ birthDate: "desc" }];
+        return [{ birthDate: { sort: "desc", nulls: "last" } }];
       default:
         return [{ sortOrder: "asc" }, { createdAt: "desc" }];
     }

@@ -40,7 +40,7 @@ export default async function KittensPage({
       <PageHeader
         eyebrow="Котята"
         title="Наши малыши"
-        subtitle="Каждый из них ждёт свою любящую семью."
+        subtitle="Все наши малыши растут в любви и домашней заботе."
       />
       <Section id="kittens" title="Выберите своего малыша">
         <div className="stitch mb-8 bg-card/40 p-4">

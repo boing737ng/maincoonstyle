@@ -96,7 +96,7 @@ export function CustomSelect({
                     "flex w-full items-center justify-between rounded px-3 py-2 text-left text-sm transition-colors",
                     isSelected
                       ? "bg-amber-soft/10 text-amber-soft"
-                      : "text-foreground hover:bg-card-foreground/5"
+                      : "text-foreground hover:bg-card-2"
                   )}
                 >
                   <span>{option.label}</span>

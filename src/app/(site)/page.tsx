@@ -26,7 +26,10 @@ export default async function HomePage() {
     getPublishedAnimals("KITTEN"),
   ]);
 
-  const featuredKittens = kittens.slice(0, 3);
+  const featuredKittens = [
+    ...kittens.filter((kitten) => kitten.status === "AVAILABLE"),
+    ...kittens.filter((kitten) => kitten.status !== "AVAILABLE"),
+  ].slice(0, 3);
 
   return (
     <>
@@ -156,7 +159,7 @@ function CtaLinks({
   const links = [
     { href: "/about", label: "О питомнике" },
     { href: "/breed", label: "О породе" },
-    { href: "/furniture", label: "Лежанки, Мебель" },
+    { href: "/furniture", label: "Лежанки и мебель" },
     { href: "/contacts", label: "Контакты" },
   ];
 

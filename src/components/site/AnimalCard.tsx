@@ -4,7 +4,6 @@ import type { Animal, AnimalPhoto } from "@prisma/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatPrice, formatDate } from "@/lib/format";
 import { publicUrl } from "@/lib/shared";
-import { cn } from "@/lib/cn";
 import { PawIcon } from "@/components/site/icons";
 
 type AnimalWithPhotos = Animal & { photos: AnimalPhoto[] };
@@ -44,10 +43,7 @@ export function KittenCard({
               alt={animal.name}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className={cn(
-                "object-cover",
-                isSold && "opacity-50 grayscale"
-              )}
+              className="object-cover"
             />
           ) : (
             <ImagePlaceholder name={animal.name} />
@@ -81,9 +77,13 @@ export function KittenCard({
             <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-strong">
               Цена
             </span>
-            <span className="mt-1 block truncate text-sm font-semibold text-accent">
-              {animal.price != null ? formatPrice(animal.price) : "По запросу"}
-            </span>
+            {isSold ? (
+              <span className="mt-1 block truncate text-sm text-muted">—</span>
+            ) : (
+              <span className="mt-1 block truncate text-sm font-semibold text-accent">
+                {animal.price != null ? formatPrice(animal.price) : "По запросу"}
+              </span>
+            )}
           </div>
         </div>
       </div>

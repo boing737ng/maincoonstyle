@@ -7,7 +7,7 @@ import { CheckIcon, StarIcon } from "@/components/site/icons";
 import { AddToCartButton } from "@/components/site/cart/AddToCartButton";
 
 export const metadata: Metadata = {
-  title: "Лежанки, Мебель",
+  title: "Лежанки и мебель",
 };
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function FurniturePage() {
   return (
     <>
       <PageHeader
-        eyebrow="Лежанки, Мебель"
+        eyebrow="Лежанки и мебель"
         title="Изделия ручной работы"
         subtitle="Каждый аксессуар создан с теплом и заботой о вашем питомце."
       />

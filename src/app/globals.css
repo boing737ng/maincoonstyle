@@ -37,6 +37,7 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -61,8 +62,8 @@ p {
 }
 
 ::selection {
-  background: var(--paper);
-  color: var(--paper-ink);
+  background: var(--accent);
+  color: var(--accent-foreground);
 }
 
 input[type="date"] {

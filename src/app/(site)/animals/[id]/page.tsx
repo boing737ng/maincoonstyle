@@ -88,9 +88,7 @@ export default async function AnimalPage({
     );
   }
 
-  const siblings = await getKittens({
-    sex: animal.sex ?? undefined,
-  });
+  const siblings = await getKittens();
   const related = siblings.filter((a) => a.id !== animal.id).slice(0, 3);
 
   return (
@@ -129,7 +127,7 @@ export default async function AnimalPage({
               <DetailRow label="Дата рождения" value={formatDate(animal.birthDate)} />
             )}
             {animal.color && <DetailRow label="Окрас" value={animal.color} />}
-            {animal.price != null && (
+            {animal.price != null && animal.status !== "SOLD" && (
               <div className="flex items-center justify-between gap-4 py-4">
                 <dt className="text-sm text-muted-strong">Цена</dt>
                 <dd className="text-right font-display text-3xl text-amber">

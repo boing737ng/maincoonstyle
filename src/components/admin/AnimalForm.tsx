@@ -55,12 +55,28 @@ export function AnimalForm({ animal, parentOptions = [] }: { animal?: AnimalWith
   const [category, setCategory] = useState<string>(animal?.category ?? "KITTEN");
   const [sex, setSex] = useState<string>(animal?.sex ?? "");
   const [status, setStatus] = useState<string>(animal?.status ?? "AVAILABLE");
+  const [fatherId, setFatherId] = useState<string>(animal?.fatherId ?? "");
+  const [motherId, setMotherId] = useState<string>(animal?.motherId ?? "");
   const fathers = parentOptions.filter(
     (parent) => parent.category === "MALE" && parent.id !== animal?.id
   );
   const mothers = parentOptions.filter(
     (parent) => parent.category === "FEMALE" && parent.id !== animal?.id
   );
+  const fatherOptions: SelectOption[] = [
+    { value: "", label: "Не указан" },
+    ...fathers.map((father) => ({
+      value: father.id,
+      label: `${father.name}${father.published ? "" : " (не опубликован)"}`,
+    })),
+  ];
+  const motherOptions: SelectOption[] = [
+    { value: "", label: "Не указана" },
+    ...mothers.map((mother) => ({
+      value: mother.id,
+      label: `${mother.name}${mother.published ? "" : " (не опубликована)"}`,
+    })),
+  ];
 
   const previews = useMemo(
     () => files.map((file) => ({ file, url: URL.createObjectURL(file) })),
@@ -202,16 +218,22 @@ export function AnimalForm({ animal, parentOptions = [] }: { animal?: AnimalWith
           {category === "KITTEN" ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Отец">
-                <select name="fatherId" defaultValue={animal?.fatherId ?? ""} className={inputClass}>
-                  <option value="">Не указан</option>
-                  {fathers.map((father) => <option key={father.id} value={father.id}>{father.name}{father.published ? "" : " (не опубликован)"}</option>)}
-                </select>
+                <CustomSelect
+                  value={fatherId}
+                  onChange={setFatherId}
+                  options={fatherOptions}
+                  ariaLabel="Отец"
+                />
+                <input type="hidden" name="fatherId" value={fatherId} />
               </Field>
               <Field label="Мать">
-                <select name="motherId" defaultValue={animal?.motherId ?? ""} className={inputClass}>
-                  <option value="">Не указана</option>
-                  {mothers.map((mother) => <option key={mother.id} value={mother.id}>{mother.name}{mother.published ? "" : " (не опубликована)"}</option>)}
-                </select>
+                <CustomSelect
+                  value={motherId}
+                  onChange={setMotherId}
+                  options={motherOptions}
+                  ariaLabel="Мать"
+                />
+                <input type="hidden" name="motherId" value={motherId} />
               </Field>
             </div>
           ) : null}
