@@ -9,11 +9,10 @@ concurrency:
   group: production-deploy
   cancel-in-progress: false
 
-timeout-minutes: 20
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Deploy over SSH
         env:
