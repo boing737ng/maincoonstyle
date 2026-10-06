@@ -1,0 +1,32 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+timeout-minutes: 20
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          USER: ${{ secrets.DEPLOY_SSH_USER }}
+          PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$PORT" "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # bootstrap: on the very first run the deploy script is not on the
+          # server yet, so sync code first; afterwards the script handles it
+          ssh -i ~/.ssh/id_ed25519 -p "$PORT" "$USER@$HOST" \
+            'cd /var/www/meinkun && { [ -f scripts/server-deploy.sh ] || { git fetch --depth 5 origin main && git reset --hard origin/main; }; } && bash scripts/server-deploy.sh'
