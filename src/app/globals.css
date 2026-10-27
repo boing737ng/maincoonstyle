@@ -141,15 +141,49 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .hero-overlay {
-  background: linear-gradient(90deg, rgb(247 245 239 / 0.96) 0%, rgb(247 245 239 / 0.88) 42%, rgb(247 245 239 / 0.18) 100%);
+  background:
+    linear-gradient(90deg, rgb(11 18 16 / 0.84) 0%, rgb(11 18 16 / 0.58) 43%, rgb(11 18 16 / 0.1) 100%),
+    linear-gradient(0deg, rgb(11 18 16 / 0.34) 0%, transparent 42%);
+  z-index: 1;
+}
+
+.hero-media {
+  animation: hero-media-drift 18s ease-in-out infinite alternate;
+  filter: saturate(0.88) contrast(1.03);
+  transform: scale(1.035);
+}
+
+.hero-glow {
+  background: radial-gradient(circle at 28% 44%, rgb(214 184 120 / 0.13), transparent 32%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .hero-copy {
   animation: hero-copy-in 650ms ease-out both;
+  position: relative;
+  z-index: 3;
+}
+
+.hero-kicker {
+  animation: hero-kicker-in 700ms 80ms ease-out both;
+}
+
+.hero-title {
+  text-shadow: 0 10px 35px rgb(0 0 0 / 0.2);
+}
+
+.hero .hero-title-primary {
+  font-size: clamp(3rem, 6.3vw, 5rem);
+  letter-spacing: 0.015em;
+  white-space: nowrap;
 }
 
 .hero-note {
   animation: hero-note-in 800ms 120ms ease-out both;
+  position: relative;
+  z-index: 3;
 }
 
 .photo-frame {
@@ -178,6 +212,27 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 @keyframes hero-note-in {
   from { opacity: 0; transform: translateX(12px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes hero-kicker-in {
+  from { opacity: 0; letter-spacing: 0.42em; transform: translateY(8px); }
+  to { opacity: 1; letter-spacing: 0.3em; transform: translateY(0); }
+}
+
+@keyframes hero-media-drift {
+  from { transform: scale(1.035) translate3d(0, 0, 0); }
+  to { transform: scale(1.08) translate3d(-0.8%, -0.4%, 0); }
+}
+
+.hero .btn-ghost {
+  border-color: rgb(255 255 255 / 0.45);
+  color: rgb(255 255 255 / 0.92);
+}
+
+.hero .btn-ghost:hover {
+  border-color: rgb(255 255 255 / 0.72);
+  background: rgb(255 255 255 / 0.12);
+  color: white;
 }
 
 .photo-frame {
@@ -209,6 +264,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .hero-copy,
   .hero-note,
+  .hero-kicker,
+  .hero-media,
   .photo-frame,
   .photo-frame img {
     animation: none;
