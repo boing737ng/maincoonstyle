@@ -66,41 +66,39 @@ function Hero({
         fill
         priority
         sizes="100vw"
-        className="hero-media object-cover object-center"
+        className="hero-media object-cover"
       />
       <div className="hero-overlay absolute inset-0" aria-hidden />
       <div className="hero-glow absolute inset-0" aria-hidden />
 
-      <div className="container-site relative grid min-h-[36rem] items-center gap-12 py-16 md:min-h-[42rem] md:grid-cols-[1.05fr_.95fr] md:py-20">
-        <div className="hero-copy max-w-xl">
-        <p className="hero-kicker text-xs font-medium tracking-[0.3em] text-white/75 uppercase">
-          питомник кошек мейн-кун
-        </p>
-        <h1 className="hero-title mt-5 flex flex-col gap-0">
-          <span className="hero-title-primary font-display text-6xl font-medium leading-[0.88] tracking-[0.06em] text-white sm:text-8xl md:text-[7.5rem]">
-            LARGE BRUSH
-          </span>
-          <span className="mt-4 font-hand text-5xl leading-none text-[#d6b878] sm:text-6xl md:text-7xl">
-            {capsName}
-          </span>
-        </h1>
-        <p className="mt-7 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg">
-          Дом больших кошек, где каждый мейн-кун растёт рядом с людьми, в заботе,
-          спокойствии и любви.
-        </p>
+      <div className="container-site relative flex min-h-[36rem] items-end py-8 md:min-h-[42rem] md:py-10">
+        <div className="hero-copy hero-panel w-full max-w-5xl">
+          <div className="hero-panel-main">
+            <p className="hero-kicker text-xs font-medium tracking-[0.3em] text-white/70 uppercase">
+              питомник кошек мейн-кун
+            </p>
+            <h1 className="hero-title mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-1">
+              <span className="hero-title-primary font-display text-5xl font-medium leading-none tracking-[0.04em] text-white sm:text-7xl md:text-8xl">
+                LARGE BRUSH
+              </span>
+              <span className="font-hand text-4xl leading-none text-[#d6b878] sm:text-5xl md:text-6xl">
+                {capsName}
+              </span>
+            </h1>
+            <p className="hero-description mt-4 max-w-xl text-base leading-relaxed text-white/75 sm:text-lg">
+              Дом больших кошек, где каждый мейн-кун растёт рядом с людьми, в заботе,
+              спокойствии и любви.
+            </p>
+          </div>
 
-        <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-          <Link href="/kittens" className="btn btn-solid">
-            Смотреть котят
-          </Link>
-          <a href={`tel:${phoneTel}`} className="btn btn-ghost">
-            Связаться с нами
-          </a>
-        </div>
-        </div>
-        <div className="hero-note hidden self-end justify-self-end border-l border-white/35 pl-5 text-sm leading-relaxed text-white/70 md:block">
-          <span className="mb-2 block font-display text-2xl text-white">Жить рядом.</span>
-          Растить с вниманием к характеру,<br />здоровью и домашнему ритму.
+          <div className="hero-panel-actions mt-6 flex flex-col gap-3 sm:flex-row md:mt-0">
+            <Link href="/kittens" className="btn btn-solid">
+              Смотреть котят
+            </Link>
+            <a href={`tel:${phoneTel}`} className="btn btn-ghost">
+              Связаться с нами
+            </a>
+          </div>
         </div>
       </div>
     </section>
