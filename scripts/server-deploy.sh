@@ -77,7 +77,7 @@ docker compose -f "$NGINX_DIR/docker-compose.yml" up -d nginx
 
 echo "--- 4/8 start database and object storage ---"
 dc up -d db minio
-dc run --rm minio-init
+dc run --rm ops node scripts/init-storage.mjs
 
 echo "--- 5/8 build application and operations images ---"
 dc build --pull app ops
