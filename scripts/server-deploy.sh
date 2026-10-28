@@ -46,8 +46,12 @@ echo "meinkun deploy started"
 echo "--- 1/8 database backup ---"
 mkdir -p "$BACKUP_DIR"
 if docker inspect meinkun-db >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -qx meinkun-db; then
-  # shellcheck disable=SC1090
-  source "$ENV_FILE"
+  env_value() {
+    sed -n "s/^${1}=//p" "$ENV_FILE" | head -n 1
+  }
+  POSTGRES_USER="$(env_value POSTGRES_USER)"
+  POSTGRES_PASSWORD="$(env_value POSTGRES_PASSWORD)"
+  POSTGRES_DB="$(env_value POSTGRES_DB)"
   BK="$BACKUP_DIR/meinkun-$(date +%Y%m%d-%H%M%S).sql.gz"
   docker exec -e PGPASSWORD="$POSTGRES_PASSWORD" meinkun-db \
     pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" | gzip > "$BK"
