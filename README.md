@@ -35,6 +35,14 @@ npm run dev
 Сайт: <http://localhost:3000>
 Админ-панель: <http://localhost:3000/admin>
 
+## Production
+
+Production запускается отдельным `docker-compose.production.yml`: PostgreSQL и
+MinIO не публикуют порты наружу, приложение работает от непривилегированного
+пользователя, а внешний HTTPS завершается в provider-managed Nginx/Certbot.
+Шаблон переменных — `.env.production.example`; секретный `.env.production`
+хранится только на сервере и имеет права `0600`.
+
 ## Полезные команды
 
 | Команда | Назначение |
