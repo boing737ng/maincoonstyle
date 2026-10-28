@@ -26,8 +26,7 @@ export GIT_TERMINAL_PROMPT=0
 exec >> >(tee -a "$LOG") 2>&1
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "This script must run as root or through sudo."
-  exit 1
+  exec sudo -n bash "$0" "$@"
 fi
 
 cd "$APP_DIR"
