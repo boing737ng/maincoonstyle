@@ -47,7 +47,7 @@ echo "--- 1/8 database backup ---"
 mkdir -p "$BACKUP_DIR"
 if docker inspect meinkun-db >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -qx meinkun-db; then
   env_value() {
-    sed -n "s/^${1}=//p" "$ENV_FILE" | head -n 1
+    sed -n "s/^${1}=//p" "$ENV_FILE" | head -n 1 | tr -d '\r'
   }
   POSTGRES_USER="$(env_value POSTGRES_USER)"
   POSTGRES_PASSWORD="$(env_value POSTGRES_PASSWORD)"
