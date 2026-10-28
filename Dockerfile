@@ -3,7 +3,9 @@ FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --include=optional --no-audit --no-fund \
-  && npm install --no-save --include=optional lightningcss-linux-x64-gnu@1.32.0
+  && npm install --no-save --include=optional \
+    lightningcss-linux-x64-gnu@1.32.0 \
+    @tailwindcss/oxide-linux-x64-gnu@4.3.3
 
 FROM node:22-bookworm-slim AS builder
 
