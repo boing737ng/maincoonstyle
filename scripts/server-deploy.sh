@@ -77,7 +77,7 @@ if [[ -f "$NGINX_CONF" ]] && ! grep -q "proxy_pass http://meinkun-app:3000" "$NG
   cp -a "$NGINX_CONF" "$NGINX_CONF.pre-meinkun.$(date +%Y%m%d-%H%M%S)"
 fi
 install -m 0644 deploy/nginx-meinkun.conf "$NGINX_CONF"
-docker compose -f "$NGINX_DIR/docker-compose.yml" up -d nginx
+docker compose -f "$NGINX_DIR/docker-compose.yml" up -d --force-recreate nginx
 
 echo "--- 4/8 start database and object storage ---"
 dc up -d db minio
@@ -95,7 +95,7 @@ dc run --rm ops node scripts/seed-production.mjs
 
 echo "--- 8/8 health checks ---"
 for i in $(seq 1 30); do
-  if curl -fsS --max-time 5 https://nginx-certbot117383.hostkey.in/ > /dev/null; then
+  if curl -fsS --max-time 5 https://nginx-certbot117383.hostkey.in/ | grep -qi '<html'; then
     echo "public HTTPS health check ok (attempt $i)"
     break
   fi
