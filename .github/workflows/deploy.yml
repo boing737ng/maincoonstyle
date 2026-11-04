@@ -11,7 +11,7 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
+  actions: read
 
 jobs:
   deploy:
@@ -37,14 +37,19 @@ jobs:
             --build-arg NEXT_PUBLIC_PHONE_DISPLAY="$PHONE_DISPLAY" \
             --build-arg NEXT_PUBLIC_PHONE_TEL="$PHONE_TEL" \
             --build-arg NEXT_PUBLIC_EMAIL="$EMAIL" \
-            -t "ghcr.io/boing737ng/maincoonstyle:$GITHUB_SHA" .
+            -t "meinkun-release:$GITHUB_SHA" .
 
-      - name: Publish release images
-        env:
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Archive release image
         run: |
-          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker push "ghcr.io/boing737ng/maincoonstyle:$GITHUB_SHA"
+          docker save "meinkun-release:$GITHUB_SHA" | gzip -1 > /tmp/meinkun-image.tar.gz
+
+      - name: Upload release image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meinkun-image-${{ github.sha }}
+          path: /tmp/meinkun-image.tar.gz
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Prepare SSH
         env:
@@ -66,10 +71,10 @@ jobs:
           HOST: ${{ secrets.DEPLOY_SSH_HOST }}
           USER: ${{ secrets.DEPLOY_SSH_USER }}
           PORT: ${{ secrets.DEPLOY_SSH_PORT }}
-          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          printf '%s\n' "$REGISTRY_TOKEN" | \
+          printf '%s\n%s\n' "$ARTIFACT_TOKEN" "$GITHUB_RUN_ID" | \
             ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
               -i ~/.ssh/id_ed25519 -p "$PORT" "$USER@$HOST" "pull $GITHUB_SHA"
 

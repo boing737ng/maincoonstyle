@@ -7,13 +7,22 @@ case "${SSH_ORIGINAL_COMMAND:-}" in
     sha="${SSH_ORIGINAL_COMMAND#pull }"
     [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || exit 2
     IFS= read -r token
-    [[ -n "$token" ]] || exit 2
+    IFS= read -r run_id
+    [[ -n "$token" && "$run_id" =~ ^[0-9]+$ ]] || exit 2
     umask 077
-    config="$(mktemp -d)"
-    trap 'rm -rf -- "$config"' EXIT
-    printf '%s' "$token" | docker --config "$config" login ghcr.io -u boing737ng --password-stdin
-    unset token
-    docker --config "$config" pull "ghcr.io/boing737ng/maincoonstyle:$sha"
+    work="$(mktemp -d)"
+    trap 'rm -rf -- "$work"; unset token' EXIT
+    artifacts="$work/artifacts.json"
+    curl --fail --silent --show-error \
+      -H "Authorization: Bearer $token" \
+      "https://api.github.com/repos/boing737ng/maincoonstyle/actions/runs/$run_id/artifacts?name=meinkun-image-$sha&per_page=1" \
+      -o "$artifacts"
+    artifact_id="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["artifacts"][0]["id"])' "$artifacts")"
+    curl --fail --silent --show-error --location \
+      -H "Authorization: Bearer $token" \
+      "https://api.github.com/repos/boing737ng/maincoonstyle/actions/artifacts/$artifact_id/zip" \
+      -o "$work/artifact.zip"
+    unzip -p "$work/artifact.zip" meinkun-image.tar.gz | docker image load
     ;;
   deploy\ *)
     sha="${SSH_ORIGINAL_COMMAND#deploy }"

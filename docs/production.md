@@ -2,10 +2,10 @@
 
 ## Архитектура
 
-Ubuntu 22.04, 2 vCPU, 2 ГБ RAM. GitHub Actions собирает два образа,
-публикует их в GHCR и запускает точный SHA коммита из `main`.
-VPS скачивает образы напрямую из GHCR. Краткоживущий GITHUB_TOKEN передаётся
-по SSH stdin и удаляется из временного Docker config после скачивания.
+Ubuntu 22.04, 2 vCPU, 2 ГБ RAM. GitHub Actions собирает образ,
+сохраняет его в GitHub Actions Artifact и запускает точный SHA коммита из `main`.
+VPS скачивает образ из Artifact. Краткоживущий GITHUB_TOKEN передаётся
+по SSH stdin и не хранится на диске VPS.
 VPS не компилирует Next.js. PostgreSQL и S3 не публикуют порты.
 Входящий трафик: SSH 22, HTTP 80 (ACME/redirect), HTTPS 443.
 Provider-managed Nginx/Certbot остаётся в `/data/nginx`.

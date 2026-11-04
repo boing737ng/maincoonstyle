@@ -43,8 +43,9 @@ MinIO не публикуют порты наружу, приложение ра
 Шаблон переменных — `.env.production.example`; секретный `.env.production`
 хранится только на сервере и имеет права `0600`.
 
-Production-образы собираются GitHub Actions и публикуются в GitHub Container
-Registry. VPS скачивает их напрямую; на VPS не требуется собирать Next.js.
+Production-образы собираются GitHub Actions и сохраняются в короткоживущем
+GitHub Actions Artifact. VPS скачивает их напрямую; на VPS не требуется
+собирать Next.js.
 Workflow запускается автоматически при push в `main`; для ручного запуска
 доступен `workflow_dispatch`.
 
@@ -56,8 +57,8 @@ Workflow запускается автоматически при push в `main`
 `NEXT_PUBLIC_PHONE_DISPLAY`, `NEXT_PUBLIC_PHONE_TEL` и `NEXT_PUBLIC_EMAIL`.
 
 У CI отдельный SSH-ключ с forced command `scripts/ci-ssh-gateway.sh`: разрешены
-только скачивание образов из GHCR и запуск деплоя указанного коммита.
-Для registry используется одноразовый `GITHUB_TOKEN` задания; постоянный
+только скачивание образа из Artifact и запуск деплоя указанного коммита.
+Для скачивания используется одноразовый `GITHUB_TOKEN` задания; постоянный
 GitHub PAT на сервере не хранится.
 Подробности подключения домена, резервного копирования и восстановления —
 в `docs/production.md`.
