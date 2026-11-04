@@ -36,9 +36,8 @@ test -f "$COMPOSE_FILE"
 
 RELEASE_SHA="${1:-}"
 [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "A full release commit SHA is required"; exit 1; }
-export MEINKUN_APP_IMAGE="ghcr.io/boing737ng/maincoonstyle-app:$RELEASE_SHA"
-export MEINKUN_OPS_IMAGE="ghcr.io/boing737ng/maincoonstyle-ops:$RELEASE_SHA"
-docker image inspect "$MEINKUN_APP_IMAGE" "$MEINKUN_OPS_IMAGE" >/dev/null
+export MEINKUN_IMAGE="ghcr.io/boing737ng/maincoonstyle:$RELEASE_SHA"
+docker image inspect "$MEINKUN_IMAGE" >/dev/null
 
 env_value() {
   sed -n "s/^${1}=//p" "$ENV_FILE" | head -n 1 | tr -d '\r' | sed 's/^"//; s/"$//'
@@ -153,8 +152,7 @@ systemctl is-active docker
 
 printf '%s\n' "$RELEASE_SHA" > "$APP_DIR/.deployed-sha"
 sed -i \
-  -e "s|^MEINKUN_APP_IMAGE=.*|MEINKUN_APP_IMAGE=$MEINKUN_APP_IMAGE|" \
-  -e "s|^MEINKUN_OPS_IMAGE=.*|MEINKUN_OPS_IMAGE=$MEINKUN_OPS_IMAGE|" \
+  -e "s|^MEINKUN_IMAGE=.*|MEINKUN_IMAGE=$MEINKUN_IMAGE|" \
   "$ENV_FILE"
 date -Is
 echo "meinkun deploy finished OK"

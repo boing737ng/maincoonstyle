@@ -54,7 +54,7 @@ services:
 
   app:
     container_name: meinkun-app
-    image: ${MEINKUN_APP_IMAGE:-meinkun-app:latest}
+    image: ${MEINKUN_IMAGE:-meinkun:latest}
     restart: unless-stopped
     mem_limit: 640m
     logging: *logging
@@ -98,7 +98,7 @@ services:
       start_period: 45s
 
   ops:
-    image: ${MEINKUN_OPS_IMAGE:-meinkun-ops:latest}
+    image: ${MEINKUN_IMAGE:-meinkun:latest}
     restart: "no"
     mem_limit: 384m
     logging: *logging

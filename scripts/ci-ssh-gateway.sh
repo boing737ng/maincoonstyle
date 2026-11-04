@@ -13,8 +13,7 @@ case "${SSH_ORIGINAL_COMMAND:-}" in
     trap 'rm -rf -- "$config"' EXIT
     printf '%s' "$token" | docker --config "$config" login ghcr.io -u boing737ng --password-stdin
     unset token
-    docker --config "$config" pull "ghcr.io/boing737ng/maincoonstyle-app:$sha"
-    docker --config "$config" pull "ghcr.io/boing737ng/maincoonstyle-ops:$sha"
+    docker --config "$config" pull "ghcr.io/boing737ng/maincoonstyle:$sha"
     ;;
   deploy\ *)
     sha="${SSH_ORIGINAL_COMMAND#deploy }"
