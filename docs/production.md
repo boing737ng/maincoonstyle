@@ -9,7 +9,12 @@ VPS скачивает образ из Artifact. Краткоживущий GITH
 VPS не компилирует Next.js. PostgreSQL и S3 не публикуют порты.
 Входящий трафик: SSH 22, HTTP 80 (ACME/redirect), HTTPS 443.
 Provider-managed Nginx/Certbot остаётся в `/data/nginx`.
-Временный адрес: `https://nginx-certbot51405.hostkey.in`.
+Основной адрес: `https://maincoonstyle.ru`.
+`https://www.maincoonstyle.ru` перенаправляет на основной, сохраняя путь и query.
+Временный адрес `https://nginx-certbot51405.hostkey.in` оставлен рабочим.
+Сертификат `maincoonstyle.ru` содержит оба имени, используется штатным
+provider-managed Certbot. Его production-выпуск прошёл 4 ноября 2026;
+первая staging-попытка получила DNS timeout. Сертификат действует до 2 февраля 2027.
 
 Лимиты RAM: app 640 МБ, PostgreSQL 320 МБ, RustFS 640 МБ.
 Swap — аварийный запас, а не замена оперативной памяти. При росте нагрузки
@@ -76,9 +81,10 @@ docker compose -f /data/nginx/docker-compose.yml logs --tail 100
    `NEXT_PUBLIC_S3_PUBLIC_URL=https://домен/media`.
    Обновить те же secrets в GitHub и выполнить Run workflow.
    Деплой не объявляет второй default server, если старый Hostkey сайт сохранён.
-6. Шаблон автодеплоя сейчас содержит только основной hostname. Если добавлен
-   `www`, закрепить его конфигурацию/redirect в шаблоне репозитория до следующего
-   деплоя, иначе он будет заменён шаблоном основного домена.
+6. Для сертификата, содержащего также `www`, установить в серверном env
+   `NGINX_REDIRECT_WWW=true`. Деплой добавляет `deploy/nginx-www-redirect.conf`
+   в конфигурацию основного домена; редирект не теряется после push.
+   Если `www` не включён в сертификат, оставить опцию выключенной.
 7. Проверить редирект HTTP → HTTPS, сертификат, страницы, админ-вход,
    загрузку/просмотр фотографий, canonical и sitemap.
    Фотографии в БД могут иметь абсолютные старые URL: перед выключением
@@ -86,6 +92,20 @@ docker compose -f /data/nginx/docker-compose.yml logs --tail 100
 
 Для нового домена лучше заранее сделать PR с явными server blocks основного
 домена, `www` и временного адреса, а не удалять работающий Hostkey конфиг.
+
+Проверка после подключения:
+
+```bash
+node scripts/check-domain.mjs
+# Если локальный DNS ещё держит старый ответ, проверить непосредственно VPS.
+# TLS-сертификат домена всё равно проверяется, это не insecure-режим.
+node scripts/check-domain.mjs 77.91.112.242
+```
+
+Проверяются HTTPS, cattery HTML, постоянный редирект www с путём/query и
+sitemap, не содержащий временный Hostkey hostname. Фактический production-выпуск
+сертификата подтверждён; dry-run именно будущего продления остаётся отдельной
+проверкой, не равнозначной первому выпуску.
 
 ## Резервные копии
 

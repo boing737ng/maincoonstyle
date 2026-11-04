@@ -107,6 +107,9 @@ if [[ -f "$NGINX_CONF" ]]; then
   cp -a "$NGINX_CONF" "$BACKUP_DIR/nginx-${PUBLIC_HOSTNAME}-$(date +%Y%m%d-%H%M%S).conf"
 fi
 sed "s/__MEINKUN_HOSTNAME__/${PUBLIC_HOSTNAME}/g" deploy/nginx-meinkun.conf > "$NGINX_CONF"
+if [[ "$(env_value NGINX_REDIRECT_WWW)" == "true" ]]; then
+  sed "s/__MEINKUN_HOSTNAME__/${PUBLIC_HOSTNAME}/g" deploy/nginx-www-redirect.conf >> "$NGINX_CONF"
+fi
 # Preserve the provider's default site when adding a second (custom) domain.
 for other in "$NGINX_DIR"/user_conf.d/*.conf; do
   if [[ "$other" != "$NGINX_CONF" ]] && grep -q 'default_server' "$other"; then
