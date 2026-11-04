@@ -20,6 +20,7 @@ cp /var/www/meinkun/.env.production "$DIR/environment"
 cp -a /data/nginx "$DIR/nginx"
 docker run --rm --network none -v nginx_secrets:/certificates:ro \
   -v "$DIR:/backup" alpine:3.22 tar -czf /backup/certificates.tar.gz -C /certificates .
+chmod 0600 "$DIR"/*.gz "$DIR/environment"
 mv "$DIR" "$ROOT/$STAMP"
 find "$ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf -- {} +
 echo "Backup complete: $ROOT/$STAMP"

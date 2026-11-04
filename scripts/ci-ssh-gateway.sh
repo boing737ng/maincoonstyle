@@ -37,7 +37,7 @@ case "${SSH_ORIGINAL_COMMAND:-}" in
     bash "$script" "$sha"
     ;;
   *)
-    echo "This key only accepts CI registry pulls and deployments" >&2
+    echo "This key only accepts CI artifact downloads and deployments" >&2
     exit 2
     ;;
 esac
