@@ -18,10 +18,17 @@ case "${SSH_ORIGINAL_COMMAND:-}" in
       "https://api.github.com/repos/boing737ng/maincoonstyle/actions/runs/$run_id/artifacts?name=meinkun-image-$sha&per_page=1" \
       -o "$artifacts"
     artifact_id="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["artifacts"][0]["id"])' "$artifacts")"
-    curl --fail --silent --show-error --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 1200 \
+    download_url="$(curl --fail --silent --show-error --retry 3 --retry-all-errors --connect-timeout 20 --max-time 120 \
       -H "Authorization: Bearer $token" \
       "https://api.github.com/repos/boing737ng/maincoonstyle/actions/artifacts/$artifact_id/zip" \
-      -o "$work/artifact.zip"
+      -o /dev/null -w '%{redirect_url}')"
+    [[ "$download_url" == https://* ]] || exit 2
+    printf '%s\n' "$download_url" > "$work/url"
+    unset download_url token
+    aria2c --quiet=true --console-log-level=error --summary-interval=0 \
+      --file-allocation=none --max-connection-per-server=8 --split=8 \
+      --min-split-size=4M --max-tries=5 --retry-wait=5 --timeout=60 \
+      --dir="$work" --out=artifact.zip --input-file="$work/url"
     unzip -p "$work/artifact.zip" meinkun-image.tar.gz | docker image load
     ;;
   deploy\ *)
