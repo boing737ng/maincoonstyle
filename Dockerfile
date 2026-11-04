@@ -39,12 +39,27 @@ COPY . .
 # Turbopack font resolver used by `next build` in Next.js 16.
 RUN npm run build -- --webpack
 
-FROM builder AS runner
+FROM node:22-bookworm-slim AS operations
+WORKDIR /ops
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+COPY deploy/ops/package.json deploy/ops/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY prisma ./prisma
+COPY scripts ./scripts
+RUN npx prisma generate
+
+FROM node:22-bookworm-slim AS runner
 LABEL org.opencontainers.image.source="https://github.com/boing737ng/maincoonstyle"
 
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
@@ -52,8 +67,7 @@ RUN groupadd --system --gid 1001 nodejs \
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+COPY --from=operations --chown=nextjs:nodejs /ops /ops
 RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app/.next/cache
 
 USER nextjs

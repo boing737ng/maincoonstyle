@@ -99,6 +99,7 @@ services:
 
   ops:
     image: ${MEINKUN_IMAGE:-meinkun:latest}
+    working_dir: /ops
     restart: "no"
     mem_limit: 384m
     logging: *logging
