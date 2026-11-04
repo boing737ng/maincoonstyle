@@ -7,15 +7,18 @@ RUN npm ci --include=optional --no-audit --no-fund \
     lightningcss-linux-x64-gnu@1.32.0 \
     @tailwindcss/oxide-linux-x64-gnu@4.3.3
 
-FROM node:22-bookworm-slim AS builder
-
-WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_DISABLE_SWC_WASM=1
-
+FROM deps AS ops
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
+COPY prisma ./prisma
+COPY scripts ./scripts
+RUN npx prisma generate
+
+FROM ops AS builder
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_DISABLE_SWC_WASM=1
 
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_S3_PUBLIC_URL
@@ -30,9 +33,7 @@ ENV NEXT_PUBLIC_PHONE_DISPLAY=$NEXT_PUBLIC_PHONE_DISPLAY
 ENV NEXT_PUBLIC_PHONE_TEL=$NEXT_PUBLIC_PHONE_TEL
 ENV NEXT_PUBLIC_EMAIL=$NEXT_PUBLIC_EMAIL
 
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runner

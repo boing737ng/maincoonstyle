@@ -9,23 +9,72 @@ concurrency:
   group: production-deploy
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
-      - name: Deploy over SSH
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Build application image
+        env:
+          SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          S3_PUBLIC_URL: ${{ secrets.NEXT_PUBLIC_S3_PUBLIC_URL }}
+          S3_BUCKET: ${{ secrets.NEXT_PUBLIC_S3_BUCKET }}
+          PHONE_DISPLAY: ${{ secrets.NEXT_PUBLIC_PHONE_DISPLAY }}
+          PHONE_TEL: ${{ secrets.NEXT_PUBLIC_PHONE_TEL }}
+          EMAIL: ${{ secrets.NEXT_PUBLIC_EMAIL }}
+        run: |
+          docker build --pull --target runner \
+            --build-arg NEXT_PUBLIC_SITE_URL="$SITE_URL" \
+            --build-arg NEXT_PUBLIC_S3_PUBLIC_URL="$S3_PUBLIC_URL" \
+            --build-arg NEXT_PUBLIC_S3_BUCKET="$S3_BUCKET" \
+            --build-arg NEXT_PUBLIC_PHONE_DISPLAY="$PHONE_DISPLAY" \
+            --build-arg NEXT_PUBLIC_PHONE_TEL="$PHONE_TEL" \
+            --build-arg NEXT_PUBLIC_EMAIL="$EMAIL" \
+            -t "meinkun-app:$GITHUB_SHA" .
+
+      - name: Build operations image
+        run: |
+          docker build --target ops -t "meinkun-ops:$GITHUB_SHA" .
+
+      - name: Prepare SSH
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          USER: ${{ secrets.DEPLOY_SSH_USER }}
+          PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: |
+          test -n "$KEY" && test -n "$KNOWN_HOSTS"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload images
         env:
           KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           HOST: ${{ secrets.DEPLOY_SSH_HOST }}
           USER: ${{ secrets.DEPLOY_SSH_USER }}
           PORT: ${{ secrets.DEPLOY_SSH_PORT }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$PORT" "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          # bootstrap: on the very first run the deploy script is not on the
-          # server yet, so sync code first; afterwards the script handles it
+          set -euo pipefail
+          docker save "meinkun-app:$GITHUB_SHA" "meinkun-ops:$GITHUB_SHA" | gzip -1 | \
+            ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
+              -i ~/.ssh/id_ed25519 -p "$PORT" "$USER@$HOST" load
+
+      - name: Deploy
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          USER: ${{ secrets.DEPLOY_SSH_USER }}
+          PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+        run: |
           ssh -i ~/.ssh/id_ed25519 -p "$PORT" "$USER@$HOST" \
-            'cd /var/www/meinkun && { [ -f scripts/server-deploy.sh ] || { git fetch --depth 5 origin main && git reset --hard origin/main; }; } && bash scripts/server-deploy.sh'
+            "deploy $GITHUB_SHA"

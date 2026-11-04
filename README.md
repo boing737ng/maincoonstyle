@@ -43,6 +43,23 @@ MinIO не публикуют порты наружу, приложение ра
 Шаблон переменных — `.env.production.example`; секретный `.env.production`
 хранится только на сервере и имеет права `0600`.
 
+Production-образы собираются GitHub Actions и передаются на сервер по SSH.
+Поэтому на VPS не требуется собирать Next.js и не нужен Docker registry.
+Workflow запускается автоматически при push в `main`; для ручного запуска
+доступен `workflow_dispatch`.
+
+Для включения автодеплоя в GitHub Actions нужны secrets:
+`DEPLOY_SSH_KEY`, `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`, `DEPLOY_SSH_PORT`,
+`DEPLOY_SSH_KNOWN_HOSTS` (ключ сервера, проверенный при первоначальной настройке),
+а также публичные настройки `NEXT_PUBLIC_SITE_URL`,
+`NEXT_PUBLIC_S3_PUBLIC_URL`, `NEXT_PUBLIC_S3_BUCKET`,
+`NEXT_PUBLIC_PHONE_DISPLAY`, `NEXT_PUBLIC_PHONE_TEL` и `NEXT_PUBLIC_EMAIL`.
+
+У CI отдельный SSH-ключ с forced command `scripts/ci-ssh-gateway.sh`: разрешены
+только загрузка Docker-образов и запуск деплоя указанного коммита.
+Подробности подключения домена, резервного копирования и восстановления —
+в `docs/production.md`.
+
 ## Полезные команды
 
 | Команда | Назначение |
