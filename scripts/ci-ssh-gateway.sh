@@ -13,12 +13,12 @@ case "${SSH_ORIGINAL_COMMAND:-}" in
     work="$(mktemp -d)"
     trap 'rm -rf -- "$work"; unset token' EXIT
     artifacts="$work/artifacts.json"
-    curl --fail --silent --show-error \
+    curl --fail --silent --show-error --retry 3 --retry-all-errors --connect-timeout 20 --max-time 120 \
       -H "Authorization: Bearer $token" \
       "https://api.github.com/repos/boing737ng/maincoonstyle/actions/runs/$run_id/artifacts?name=meinkun-image-$sha&per_page=1" \
       -o "$artifacts"
     artifact_id="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["artifacts"][0]["id"])' "$artifacts")"
-    curl --fail --silent --show-error --location \
+    curl --fail --silent --show-error --location --retry 3 --retry-all-errors --connect-timeout 20 --max-time 1200 \
       -H "Authorization: Bearer $token" \
       "https://api.github.com/repos/boing737ng/maincoonstyle/actions/artifacts/$artifact_id/zip" \
       -o "$work/artifact.zip"
