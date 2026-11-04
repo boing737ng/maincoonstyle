@@ -23,13 +23,15 @@ case "${SSH_ORIGINAL_COMMAND:-}" in
       "https://api.github.com/repos/boing737ng/maincoonstyle/actions/artifacts/$artifact_id/zip" \
       -o /dev/null -w '%{redirect_url}')"
     [[ "$download_url" == https://* ]] || exit 2
-    printf '%s\n' "$download_url" > "$work/url"
+    # In aria2 input-file mode, "out" must be a per-entry option.
+    printf '%s\n  out=artifact.zip\n' "$download_url" > "$work/url"
     unset download_url token
     aria2c --quiet=true --console-log-level=error --summary-interval=0 \
       --file-allocation=none --max-connection-per-server=8 --split=8 \
       --min-split-size=4M --max-tries=5 --retry-wait=5 --timeout=60 \
-      --dir="$work" --out=artifact.zip --input-file="$work/url"
-    unzip -p "$work/artifact.zip" meinkun-image.tar.gz | docker image load
+      --dir="$work" --input-file="$work/url"
+    unzip -t "$work/artifact.zip" >/dev/null
+    unzip -p "$work/artifact.zip" meinkun-image.tar.gz | gzip -dc | docker image load
     ;;
   deploy\ *)
     sha="${SSH_ORIGINAL_COMMAND#deploy }"
