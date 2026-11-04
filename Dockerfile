@@ -8,6 +8,7 @@ RUN npm ci --include=optional --no-audit --no-fund \
     @tailwindcss/oxide-linux-x64-gnu@4.3.3
 
 FROM deps AS ops
+LABEL org.opencontainers.image.source="https://github.com/boing737ng/maincoonstyle"
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
@@ -39,6 +40,7 @@ COPY . .
 RUN npm run build -- --webpack
 
 FROM node:22-bookworm-slim AS runner
+LABEL org.opencontainers.image.source="https://github.com/boing737ng/maincoonstyle"
 
 WORKDIR /app
 ENV NODE_ENV=production

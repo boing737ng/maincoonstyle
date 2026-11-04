@@ -36,8 +36,8 @@ test -f "$COMPOSE_FILE"
 
 RELEASE_SHA="${1:-}"
 [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "A full release commit SHA is required"; exit 1; }
-export MEINKUN_APP_IMAGE="meinkun-app:$RELEASE_SHA"
-export MEINKUN_OPS_IMAGE="meinkun-ops:$RELEASE_SHA"
+export MEINKUN_APP_IMAGE="ghcr.io/boing737ng/maincoonstyle-app:$RELEASE_SHA"
+export MEINKUN_OPS_IMAGE="ghcr.io/boing737ng/maincoonstyle-ops:$RELEASE_SHA"
 docker image inspect "$MEINKUN_APP_IMAGE" "$MEINKUN_OPS_IMAGE" >/dev/null
 
 env_value() {

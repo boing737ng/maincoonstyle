@@ -11,11 +11,12 @@ concurrency:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -36,11 +37,19 @@ jobs:
             --build-arg NEXT_PUBLIC_PHONE_DISPLAY="$PHONE_DISPLAY" \
             --build-arg NEXT_PUBLIC_PHONE_TEL="$PHONE_TEL" \
             --build-arg NEXT_PUBLIC_EMAIL="$EMAIL" \
-            -t "meinkun-app:$GITHUB_SHA" .
+            -t "ghcr.io/boing737ng/maincoonstyle-app:$GITHUB_SHA" .
 
       - name: Build operations image
         run: |
-          docker build --target ops -t "meinkun-ops:$GITHUB_SHA" .
+          docker build --target ops -t "ghcr.io/boing737ng/maincoonstyle-ops:$GITHUB_SHA" .
+
+      - name: Publish release images
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push "ghcr.io/boing737ng/maincoonstyle-app:$GITHUB_SHA"
+          docker push "ghcr.io/boing737ng/maincoonstyle-ops:$GITHUB_SHA"
 
       - name: Prepare SSH
         env:
@@ -57,17 +66,17 @@ jobs:
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
-      - name: Upload images
+      - name: Pull images on server
         env:
-          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           HOST: ${{ secrets.DEPLOY_SSH_HOST }}
           USER: ${{ secrets.DEPLOY_SSH_USER }}
           PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          docker save "meinkun-app:$GITHUB_SHA" "meinkun-ops:$GITHUB_SHA" | gzip -1 | \
+          printf '%s\n' "$REGISTRY_TOKEN" | \
             ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
-              -i ~/.ssh/id_ed25519 -p "$PORT" "$USER@$HOST" load
+              -i ~/.ssh/id_ed25519 -p "$PORT" "$USER@$HOST" "pull $GITHUB_SHA"
 
       - name: Deploy
         env:

@@ -3,8 +3,18 @@
 # Use a forced command and "restrict" for the CI key in authorized_keys.
 set -Eeuo pipefail
 case "${SSH_ORIGINAL_COMMAND:-}" in
-  load)
-    gzip -dc | docker image load
+  pull\ *)
+    sha="${SSH_ORIGINAL_COMMAND#pull }"
+    [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || exit 2
+    IFS= read -r token
+    [[ -n "$token" ]] || exit 2
+    umask 077
+    config="$(mktemp -d)"
+    trap 'rm -rf -- "$config"' EXIT
+    printf '%s' "$token" | docker --config "$config" login ghcr.io -u boing737ng --password-stdin
+    unset token
+    docker --config "$config" pull "ghcr.io/boing737ng/maincoonstyle-app:$sha"
+    docker --config "$config" pull "ghcr.io/boing737ng/maincoonstyle-ops:$sha"
     ;;
   deploy\ *)
     sha="${SSH_ORIGINAL_COMMAND#deploy }"
@@ -19,7 +29,7 @@ case "${SSH_ORIGINAL_COMMAND:-}" in
     bash "$script" "$sha"
     ;;
   *)
-    echo "This key only accepts CI image uploads and deployments" >&2
+    echo "This key only accepts CI registry pulls and deployments" >&2
     exit 2
     ;;
 esac

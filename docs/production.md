@@ -3,7 +3,9 @@
 ## Архитектура
 
 Ubuntu 22.04, 2 vCPU, 2 ГБ RAM. GitHub Actions собирает два образа,
-передаёт их по SSH и запускает точный SHA коммита из `main`.
+публикует их в GHCR и запускает точный SHA коммита из `main`.
+VPS скачивает образы напрямую из GHCR. Краткоживущий GITHUB_TOKEN передаётся
+по SSH stdin и удаляется из временного Docker config после скачивания.
 VPS не компилирует Next.js. PostgreSQL и S3 не публикуют порты.
 Входящий трафик: SSH 22, HTTP 80 (ACME/redirect), HTTPS 443.
 Provider-managed Nginx/Certbot остаётся в `/data/nginx`.
@@ -85,7 +87,7 @@ docker compose -f /data/nginx/docker-compose.yml logs --tail 100
 ## Резервные копии
 
 Перед деплоем: SQL в `/root/backups`, сохраняются последние 10 дампов.
-Ежедневный `scripts/backup-production.sh` копирует БД, media, env, Nginx
+Ежедневный (02:17 Europe/Moscow) `scripts/backup-production.sh` копирует БД, media, env, Nginx
 и сертификаты в `/root/backups/daily`, хранит около 7 дней.
 Бэкап фото выполняется на живом хранилище: для строгой согласованности
 нужно временно остановить загрузку фотографий.
