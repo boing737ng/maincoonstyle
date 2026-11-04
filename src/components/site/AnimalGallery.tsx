@@ -136,7 +136,7 @@ export function AnimalGallery({
                   type="button"
                   onClick={goPrev}
                   aria-label="Предыдущее фото"
-                  className="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition-colors hover:bg-paper hover:text-paper-ink"
+                  className="absolute left-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition-colors hover:bg-paper hover:text-paper-ink sm:left-2 sm:h-11 sm:w-11"
                 >
                   <Chevron direction="left" />
                 </button>
@@ -144,7 +144,7 @@ export function AnimalGallery({
                   type="button"
                   onClick={goNext}
                   aria-label="Следующее фото"
-                  className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition-colors hover:bg-paper hover:text-paper-ink"
+                  className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur transition-colors hover:bg-paper hover:text-paper-ink sm:right-2 sm:h-11 sm:w-11"
                 >
                   <Chevron direction="right" />
                 </button>

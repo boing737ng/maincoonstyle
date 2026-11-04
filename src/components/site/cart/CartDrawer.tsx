@@ -93,7 +93,7 @@ export function CartDrawer() {
 
   return (
     <div
-      className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`}
+      className={`fixed inset-0 z-[70] overflow-hidden ${open ? "" : "hidden"}`}
       aria-hidden={!open}
     >
       <div
@@ -111,14 +111,14 @@ export function CartDrawer() {
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <header className="flex items-center justify-between border-b border-border px-6 py-4">
+        <header className="flex shrink-0 items-center justify-between border-b border-border px-6 py-4">
           <h2 className="font-display text-xl text-foreground">Корзина</h2>
           <button
             type="button"
             ref={closeButtonRef}
             onClick={close}
             aria-label="Закрыть корзину"
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted transition-colors hover:border-accent hover:text-accent-hover"
+            className="flex h-11 w-11 items-center justify-center rounded-md border border-border text-muted transition-colors hover:border-accent hover:text-accent-hover"
           >
             <svg
               viewBox="0 0 24 24"
@@ -171,21 +171,21 @@ export function CartDrawer() {
             </Link>
           </div>
         ) : (
-          <form onSubmit={submit} className="flex flex-1 flex-col overflow-hidden">
-            <ul className="flex-1 divide-y divide-border overflow-y-auto px-6">
+          <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+            <ul className="shrink-0 divide-y divide-border px-4 min-[480px]:px-6">
               {items.map((item) => (
                 <li
                   key={item.productId}
                   className="flex items-center justify-between gap-3 py-3"
                 >
-                  <span className="font-display text-lg text-foreground">
-                    {item.label}
+                  <span className="min-w-0 font-display text-base min-[420px]:text-lg text-foreground">
+                    <span className="block break-words hyphens-auto">{item.label}</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => removeFromCart(item.productId)}
                     aria-label={`Убрать ${item.label}`}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border text-muted transition-colors hover:border-accent hover:text-accent-hover"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border text-muted transition-colors hover:border-accent hover:text-accent-hover"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -203,7 +203,7 @@ export function CartDrawer() {
               ))}
             </ul>
 
-            <div className="space-y-3 border-t border-border px-6 py-5">
+            <div className="mt-auto shrink-0 space-y-3 border-t border-border px-4 py-5 min-[480px]:px-6">
               <p className="text-sm leading-relaxed text-muted">
                 Оставьте контакты — мы свяжемся с вами, чтобы подтвердить заказ.
               </p>

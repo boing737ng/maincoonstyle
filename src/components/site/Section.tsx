@@ -18,7 +18,7 @@ export function PageHeader({
               {eyebrow}
             </p>
           )}
-          <h1 className="max-w-2xl text-4xl leading-[1.04] text-foreground sm:text-5xl md:text-6xl">
+          <h1 className="max-w-2xl text-4xl leading-[1.12] text-foreground sm:text-5xl md:text-6xl">
             {title}
           </h1>
           {subtitle && (

@@ -132,14 +132,14 @@ function TimelineSection({
     <section id={id} className="relative scroll-mt-24 py-8 sm:py-10">
       <span
         aria-hidden
-        className="absolute -left-[7px] top-[38px] flex h-3.5 w-3.5 items-center justify-center rounded-full border border-accent/70 bg-background sm:-left-[13px]"
+        className="absolute -left-[39px] top-[38px] flex h-3.5 w-3.5 items-center justify-center rounded-full border border-accent/70 bg-background sm:-left-[55px] sm:top-[49px]"
       >
         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
       </span>
       <h2 className="text-2xl leading-tight text-accent-hover sm:text-3xl">
         {title}
       </h2>
-      {pending ? <PendingNote /> : children}
+      {pending ? <PendingNote /> : <div className="mt-4 max-w-3xl">{children}</div>}
     </section>
   );
 }

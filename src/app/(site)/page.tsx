@@ -15,10 +15,14 @@ export default async function HomePage() {
     getPublishedAnimals("KITTEN"),
   ]);
 
-  const featuredKittens = [
-    ...kittens.filter((kitten) => kitten.status === "AVAILABLE"),
-    ...kittens.filter((kitten) => kitten.status !== "AVAILABLE"),
-  ].slice(0, 3);
+  const availableKittens = kittens.filter((kitten) => kitten.status === "AVAILABLE");
+  const featuredKittens = (availableKittens.length > 0 ? availableKittens : kittens).slice(0, 3);
+  const kittensTitle = availableKittens.length > 0
+    ? "Котята, которых уже любят"
+    : "Наши котята";
+  const kittensSubtitle = availableKittens.length > 0
+    ? "Они растут рядом с нами, в спокойной домашней обстановке."
+    : "Познакомьтесь с нашими малышами и следите за новостями питомника.";
 
   return (
     <>
@@ -27,8 +31,8 @@ export default async function HomePage() {
       <Section
         id="kittens"
         eyebrow="сейчас в питомнике"
-        title="Котята, которых уже любят"
-        subtitle="Они растут рядом с нами, в спокойной домашней обстановке."
+        title={kittensTitle}
+        subtitle={kittensSubtitle}
       >
         <KittenGrid kittens={featuredKittens} />
         <div className="mt-12">
@@ -71,27 +75,27 @@ function Hero({
       <div className="hero-overlay absolute inset-0" aria-hidden />
       <div className="hero-glow absolute inset-0" aria-hidden />
 
-      <div className="container-site relative flex min-h-[36rem] items-end py-8 md:min-h-[42rem] md:py-10">
+      <div className="container-site relative flex min-h-[32rem] items-end py-5 sm:min-h-[38rem] sm:py-8 md:min-h-[42rem] md:py-10">
         <div className="hero-copy hero-panel w-full max-w-5xl">
           <div className="hero-panel-main">
-            <p className="hero-kicker text-xs font-medium tracking-[0.3em] text-white/70 uppercase">
+            <p className="hero-kicker text-[11px] font-medium tracking-[0.25em] text-white/70 uppercase sm:text-xs sm:tracking-[0.3em]">
               питомник кошек мейн-кун
             </p>
-            <h1 className="hero-title mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-1">
-              <span className="hero-title-primary font-display text-5xl font-medium leading-none tracking-[0.04em] text-white sm:text-7xl md:text-8xl">
+            <h1 className="hero-title mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 sm:mt-3 sm:gap-x-5">
+              <span className="hero-title-primary font-display text-4xl font-medium leading-none tracking-[0.03em] text-white sm:text-7xl md:text-8xl">
                 LARGE BRUSH
               </span>
-              <span className="font-hand text-4xl leading-none text-[#d6b878] sm:text-5xl md:text-6xl">
+              <span className="font-hand text-3xl leading-none text-[#d6b878] sm:text-5xl md:text-6xl">
                 {capsName}
               </span>
             </h1>
-            <p className="hero-description mt-4 max-w-xl text-base leading-relaxed text-white/75 sm:text-lg">
+            <p className="hero-description mt-3 max-w-xl text-sm leading-relaxed text-white/80 sm:mt-4 sm:text-lg">
               Дом больших кошек, где каждый мейн-кун растёт рядом с людьми, в заботе,
               спокойствии и любви.
             </p>
           </div>
 
-          <div className="hero-panel-actions mt-6 flex flex-col gap-3 sm:flex-row md:mt-0">
+          <div className="hero-panel-actions mt-5 flex flex-col gap-2.5 sm:mt-6 sm:flex-row sm:gap-3 md:mt-0">
             <Link href="/kittens" className="btn btn-solid">
               Смотреть котят
             </Link>

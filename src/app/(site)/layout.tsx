@@ -17,7 +17,7 @@ export default async function SiteLayout({
         phoneDisplay={site.phoneDisplay}
         phoneTel={site.phoneTel}
       />
-      <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+      <main className="flex-1 pb-20 sm:pb-0">{children}</main>
       <Footer
         siteName={site.name}
         phoneDisplay={site.phoneDisplay}

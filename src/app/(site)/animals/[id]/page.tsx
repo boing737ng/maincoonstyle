@@ -58,26 +58,28 @@ export default async function AnimalPage({
   if (animal.category !== "KITTEN") {
     return (
       <div className="container-site py-10 sm:py-16">
-        <nav aria-label="Хлебные крошки" className="mb-8 text-sm text-muted">
-          <Link href="/" className="hover:text-amber-soft">
-            Главная
-          </Link>
-          <span className="mx-2 text-muted-strong">/</span>
-          <Link href={categoryHref} className="hover:text-amber-soft">
-            {categoryLabel}
-          </Link>
-          <span className="mx-2 text-muted-strong">/</span>
-          <span className="text-foreground">{animal.name}</span>
-        </nav>
+      <nav aria-label="Хлебные крошки" className="mb-8 flex flex-wrap items-baseline gap-x-0.5 gap-y-1 text-sm text-muted">
+        <Link href="/" className="hover:text-amber-soft">
+          Главная
+        </Link>
+        <span className="mx-1.5 text-muted-strong sm:mx-2">/</span>
+        <Link href={categoryHref} className="hover:text-amber-soft">
+          {categoryLabel}
+        </Link>
+        <span className="mx-1.5 text-muted-strong sm:mx-2">/</span>
+        <span className="text-foreground">{animal.name}</span>
+      </nav>
 
-        <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-3xl">
           <AnimalGallery photos={animal.photos} name={animal.name} />
-          <p className="mt-6 text-center font-display text-2xl text-foreground sm:text-3xl">
-            {animal.name}
+          <div className="mt-6 text-center">
+            <p className="font-display text-2xl text-foreground sm:text-3xl">
+              {animal.name}
+            </p>
             {animal.color ? (
-              <span className="text-muted"> {animal.color}</span>
+              <p className="mt-1 text-sm text-muted">Окрас: {animal.color}</p>
             ) : null}
-          </p>
+          </div>
           {animal.birthDate ? (
             <p className="mt-2 text-center text-sm text-muted">
               Дата рождения: {formatDate(animal.birthDate)}
@@ -93,15 +95,15 @@ export default async function AnimalPage({
 
   return (
     <div className="container-site py-10 sm:py-16">
-      <nav aria-label="Хлебные крошки" className="mb-8 text-sm text-muted">
+      <nav aria-label="Хлебные крошки" className="mb-8 flex flex-wrap items-baseline gap-x-0.5 gap-y-1 text-sm text-muted">
         <Link href="/" className="hover:text-amber-soft">
           Главная
         </Link>
-        <span className="mx-2 text-muted-strong">/</span>
+        <span className="mx-1.5 text-muted-strong sm:mx-2">/</span>
         <Link href={categoryHref} className="hover:text-amber-soft">
           {categoryLabel}
         </Link>
-        <span className="mx-2 text-muted-strong">/</span>
+        <span className="mx-1.5 text-muted-strong sm:mx-2">/</span>
         <span className="text-foreground">{animal.name}</span>
       </nav>
 
