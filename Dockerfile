@@ -34,7 +34,9 @@ ENV NEXT_PUBLIC_PHONE_TEL=$NEXT_PUBLIC_PHONE_TEL
 ENV NEXT_PUBLIC_EMAIL=$NEXT_PUBLIC_EMAIL
 
 COPY . .
-RUN npm run build
+# Webpack is more deterministic in clean CI builds than the experimental
+# Turbopack font resolver used by `next build` in Next.js 16.
+RUN npm run build -- --webpack
 
 FROM node:22-bookworm-slim AS runner
 
