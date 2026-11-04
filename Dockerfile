@@ -7,15 +7,19 @@ RUN npm ci --include=optional --no-audit --no-fund \
     lightningcss-linux-x64-gnu@1.32.0 \
     @tailwindcss/oxide-linux-x64-gnu@4.3.3
 
-FROM node:22-bookworm-slim AS builder
-
-WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_DISABLE_SWC_WASM=1
-
+FROM deps AS ops
+LABEL org.opencontainers.image.source="https://github.com/boing737ng/maincoonstyle"
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
+COPY prisma ./prisma
+COPY scripts ./scripts
+RUN npx prisma generate
+
+FROM ops AS builder
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_DISABLE_SWC_WASM=1
 
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_S3_PUBLIC_URL
@@ -30,12 +34,24 @@ ENV NEXT_PUBLIC_PHONE_DISPLAY=$NEXT_PUBLIC_PHONE_DISPLAY
 ENV NEXT_PUBLIC_PHONE_TEL=$NEXT_PUBLIC_PHONE_TEL
 ENV NEXT_PUBLIC_EMAIL=$NEXT_PUBLIC_EMAIL
 
-COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Webpack is more deterministic in clean CI builds than the experimental
+# Turbopack font resolver used by `next build` in Next.js 16.
+RUN npm run build -- --webpack
+
+FROM node:22-bookworm-slim AS operations
+WORKDIR /ops
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+COPY deploy/ops/package.json deploy/ops/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY prisma ./prisma
+COPY scripts ./scripts
 RUN npx prisma generate
-RUN npm run build
 
 FROM node:22-bookworm-slim AS runner
+LABEL org.opencontainers.image.source="https://github.com/boing737ng/maincoonstyle"
 
 WORKDIR /app
 ENV NODE_ENV=production
@@ -51,6 +67,8 @@ RUN groupadd --system --gid 1001 nodejs \
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=operations --chown=nextjs:nodejs /ops /ops
+RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app/.next/cache
 
 USER nextjs
 EXPOSE 3000

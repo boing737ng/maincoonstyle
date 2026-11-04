@@ -43,6 +43,26 @@ MinIO не публикуют порты наружу, приложение ра
 Шаблон переменных — `.env.production.example`; секретный `.env.production`
 хранится только на сервере и имеет права `0600`.
 
+Production-образы собираются GitHub Actions и сохраняются в короткоживущем
+GitHub Actions Artifact. VPS скачивает их напрямую; на VPS не требуется
+собирать Next.js.
+Workflow запускается автоматически при push в `main`; для ручного запуска
+доступен `workflow_dispatch`.
+
+Для включения автодеплоя в GitHub Actions нужны secrets:
+`DEPLOY_SSH_KEY`, `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`, `DEPLOY_SSH_PORT`,
+`DEPLOY_SSH_KNOWN_HOSTS` (ключ сервера, проверенный при первоначальной настройке),
+а также публичные настройки `NEXT_PUBLIC_SITE_URL`,
+`NEXT_PUBLIC_S3_PUBLIC_URL`, `NEXT_PUBLIC_S3_BUCKET`,
+`NEXT_PUBLIC_PHONE_DISPLAY`, `NEXT_PUBLIC_PHONE_TEL` и `NEXT_PUBLIC_EMAIL`.
+
+У CI отдельный SSH-ключ с forced command `scripts/ci-ssh-gateway.sh`: разрешены
+только скачивание образа из Artifact и запуск деплоя указанного коммита.
+Для скачивания используется одноразовый `GITHUB_TOKEN` задания; постоянный
+GitHub PAT на сервере не хранится.
+Подробности подключения домена, резервного копирования и восстановления —
+в `docs/production.md`.
+
 ## Полезные команды
 
 | Команда | Назначение |

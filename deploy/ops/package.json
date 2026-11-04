@@ -1,0 +1,12 @@
+{
+  "name": "meinkun-production-ops",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "bcryptjs": "3.0.3",
+    "minio": "8.0.7",
+    "prisma": "6.19.3"
+  }
+}

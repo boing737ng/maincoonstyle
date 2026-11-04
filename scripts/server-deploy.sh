@@ -14,7 +14,6 @@ APP_DIR=/var/www/meinkun
 COMPOSE_FILE="$APP_DIR/docker-compose.production.yml"
 ENV_FILE="$APP_DIR/.env.production"
 NGINX_DIR=/data/nginx
-NGINX_CONF="$NGINX_DIR/user_conf.d/nginx-certbot117383.hostkey.in.conf"
 BACKUP_DIR=/root/backups
 LOG=/var/log/meinkun-deploy.log
 
@@ -23,15 +22,35 @@ export NODE_OPTIONS=--max-old-space-size=1280
 export CI=1
 export GIT_TERMINAL_PROMPT=0
 
-exec >> >(tee -a "$LOG") 2>&1
-
 if [[ "$(id -u)" -ne 0 ]]; then
   exec sudo -n bash "$0" "$@"
 fi
+umask 077
+exec >> >(tee -a "$LOG") 2>&1
+exec 9>/var/lock/meinkun-deploy.lock
+flock -n 9 || { echo "Another deployment is running"; exit 1; }
 
 cd "$APP_DIR"
 test -f "$ENV_FILE"
 test -f "$COMPOSE_FILE"
+
+RELEASE_SHA="${1:-}"
+[[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "A full release commit SHA is required"; exit 1; }
+export MEINKUN_IMAGE="meinkun-release:$RELEASE_SHA"
+docker image inspect "$MEINKUN_IMAGE" >/dev/null
+
+env_value() {
+  sed -n "s/^${1}=//p" "$ENV_FILE" | head -n 1 | tr -d '\r' | sed 's/^"//; s/"$//'
+}
+
+SITE_URL="$(env_value NEXT_PUBLIC_SITE_URL)"
+PUBLIC_HOSTNAME="${SITE_URL#*://}"
+PUBLIC_HOSTNAME="${PUBLIC_HOSTNAME%%/*}"
+if [[ "$SITE_URL" != "https://$PUBLIC_HOSTNAME" || ! "$PUBLIC_HOSTNAME" =~ ^[a-zA-Z0-9.-]+$ ]]; then
+  echo "Could not determine hostname from NEXT_PUBLIC_SITE_URL"
+  exit 1
+fi
+NGINX_CONF="$NGINX_DIR/user_conf.d/${PUBLIC_HOSTNAME}.conf"
 
 dc() {
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
@@ -41,13 +60,11 @@ echo
 echo "============================================================"
 date -Is
 echo "meinkun deploy started"
+echo "release: $RELEASE_SHA"
 
 echo "--- 1/8 database backup ---"
 mkdir -p "$BACKUP_DIR"
 if docker inspect meinkun-db >/dev/null 2>&1 && docker ps --format '{{.Names}}' | grep -qx meinkun-db; then
-  env_value() {
-    sed -n "s/^${1}=//p" "$ENV_FILE" | head -n 1 | tr -d '\r'
-  }
   POSTGRES_USER="$(env_value POSTGRES_USER)"
   POSTGRES_PASSWORD="$(env_value POSTGRES_PASSWORD)"
   POSTGRES_DB="$(env_value POSTGRES_DB)"
@@ -61,40 +78,63 @@ else
   echo "no existing database container; backup skipped"
 fi
 
-echo "--- 2/8 fetch code ---"
-if [[ "${SKIP_GIT_FETCH:-0}" == "1" ]]; then
-  echo "git fetch skipped for an uploaded release bundle"
-else
-  git fetch --depth 10 origin main
-  git reset --hard origin/main
-  git log --oneline -1
-fi
+echo "--- 2/8 check out exact CI release ---"
+git fetch --depth 20 origin main
+git cat-file -e "$RELEASE_SHA^{commit}"
+git merge-base --is-ancestor "$RELEASE_SHA" origin/main
+git reset --hard "$RELEASE_SHA"
 
-echo "--- 3/8 install provider Nginx site config ---"
-install -d -m 0750 "$NGINX_DIR/user_conf.d"
-if [[ -f "$NGINX_CONF" ]] && ! grep -q "proxy_pass http://meinkun-app:3000" "$NGINX_CONF"; then
-  cp -a "$NGINX_CONF" "$NGINX_CONF.pre-meinkun.$(date +%Y%m%d-%H%M%S)"
-fi
-install -m 0644 deploy/nginx-meinkun.conf "$NGINX_CONF"
-docker compose -f "$NGINX_DIR/docker-compose.yml" up -d --force-recreate nginx
-
-echo "--- 4/8 start database and object storage ---"
+echo "--- 3/8 start database and object storage ---"
 dc up -d db minio
 dc run --rm ops node scripts/init-storage.mjs
 
-echo "--- 5/8 build application and operations images ---"
-dc build --pull app ops
-
-echo "--- 6/8 apply migrations ---"
+echo "--- 4/8 apply migrations ---"
 dc run --rm ops npx prisma migrate deploy
 
-echo "--- 7/8 restart application and seed admin ---"
-dc up -d app
+echo "--- 5/8 seed administrator without resetting existing password ---"
 dc run --rm ops node scripts/seed-production.mjs
 
+echo "--- 6/8 restart application ---"
+dc up -d --wait --wait-timeout 180 app
+
+echo "--- 7/8 install provider Nginx site config ---"
+install -d -m 0750 "$NGINX_DIR/user_conf.d"
+NGINX_BACKUP="$(mktemp)"
+HAD_CONFIG=0
+if [[ -f "$NGINX_CONF" ]]; then
+  HAD_CONFIG=1
+  cp -a "$NGINX_CONF" "$NGINX_BACKUP"
+  cp -a "$NGINX_CONF" "$BACKUP_DIR/nginx-${PUBLIC_HOSTNAME}-$(date +%Y%m%d-%H%M%S).conf"
+fi
+sed "s/__MEINKUN_HOSTNAME__/${PUBLIC_HOSTNAME}/g" deploy/nginx-meinkun.conf > "$NGINX_CONF"
+if [[ "$(env_value NGINX_REDIRECT_WWW)" == "true" ]]; then
+  sed "s/__MEINKUN_HOSTNAME__/${PUBLIC_HOSTNAME}/g" deploy/nginx-www-redirect.conf >> "$NGINX_CONF"
+fi
+# Preserve the provider's default site when adding a second (custom) domain.
+for other in "$NGINX_DIR"/user_conf.d/*.conf; do
+  if [[ "$other" != "$NGINX_CONF" ]] && grep -q 'default_server' "$other"; then
+    sed -i 's/ default_server reuseport//g' "$NGINX_CONF"
+    break
+  fi
+done
+chmod 0644 "$NGINX_CONF"
+if ! docker compose -f "$NGINX_DIR/docker-compose.yml" exec -T nginx nginx -t; then
+  if [[ "$HAD_CONFIG" == 1 ]]; then
+    cp -a "$NGINX_BACKUP" "$NGINX_CONF"
+  else
+    rm -f "$NGINX_CONF"
+  fi
+  rm -f "$NGINX_BACKUP"
+  echo "Invalid Nginx config restored; old running proxy was not reloaded"
+  exit 1
+fi
+rm -f "$NGINX_BACKUP"
+docker compose -f "$NGINX_DIR/docker-compose.yml" exec -T nginx nginx -s reload
+
 echo "--- 8/8 health checks ---"
+HEALTH_BODY="$(mktemp)"
 for i in $(seq 1 30); do
-  if curl -fsS --max-time 5 https://nginx-certbot117383.hostkey.in/ | grep -qi '<html'; then
+  if curl -fsS --max-time 15 "$SITE_URL/" -o "$HEALTH_BODY" && grep -qi '<html' "$HEALTH_BODY"; then
     echo "public HTTPS health check ok (attempt $i)"
     break
   fi
@@ -102,14 +142,20 @@ for i in $(seq 1 30); do
     echo "HEALTH CHECK FAILED"
     dc ps
     docker logs --tail 80 meinkun-app || true
+    rm -f "$HEALTH_BODY"
     exit 1
   fi
   sleep 3
 done
+rm -f "$HEALTH_BODY"
 
 dc ps
 docker compose -f "$NGINX_DIR/docker-compose.yml" ps
 systemctl is-active docker
 
+printf '%s\n' "$RELEASE_SHA" > "$APP_DIR/.deployed-sha"
+sed -i \
+  -e "s|^MEINKUN_IMAGE=.*|MEINKUN_IMAGE=$MEINKUN_IMAGE|" \
+  "$ENV_FILE"
 date -Is
 echo "meinkun deploy finished OK"
