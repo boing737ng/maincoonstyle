@@ -4,6 +4,7 @@ import { PageHeader, Section } from "@/components/site/Section";
 
 export const metadata: Metadata = {
   title: "Контакты",
+  alternates: { canonical: "/contacts" },
 };
 
 export default function ContactsPage() {

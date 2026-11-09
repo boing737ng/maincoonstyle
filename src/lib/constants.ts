@@ -1,6 +1,16 @@
 import "server-only";
 
-const siteData = {
+export type SiteData = {
+  name: string;
+  phoneDisplay: string;
+  phoneTel: string;
+  email: string;
+  siteUrl: string;
+  facebook: string;
+  instagram: string;
+};
+
+const siteData: SiteData = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "LargeBrush Cattery",
   phoneDisplay:
     process.env.NEXT_PUBLIC_PHONE_DISPLAY || "+7 (903) 622-01-42",

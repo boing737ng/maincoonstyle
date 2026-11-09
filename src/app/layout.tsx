@@ -40,6 +40,13 @@ export const metadata: Metadata = {
     title: "LargeBrush Cattery — питомник мейн-кунов",
     description:
       "Домашний питомник мейн-кунов. Котята, коты и кошки, а также уникальные лежанки и мебель ручной работы для ваших питомцев.",
+    url: site.siteUrl,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LargeBrush Cattery — питомник мейн-кунов",
+    description:
+      "Домашний питомник мейн-кунов. Котята, коты и кошки, а также уникальные лежанки и мебель ручной работы для ваших питомцев.",
   },
 };
 

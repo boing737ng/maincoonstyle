@@ -8,6 +8,7 @@ import { KittenFilters as KittenFilterControls } from "@/components/site/KittenF
 
 export const metadata: Metadata = {
   title: "Котята",
+  alternates: { canonical: "/kittens" },
 };
 
 export const dynamic = "force-dynamic";

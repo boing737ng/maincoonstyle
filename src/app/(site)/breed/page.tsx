@@ -5,6 +5,7 @@ import { PawIcon } from "@/components/site/icons";
 
 export const metadata: Metadata = {
   title: "О породе",
+  alternates: { canonical: "/breed" },
 };
 
 const PLANTS = [

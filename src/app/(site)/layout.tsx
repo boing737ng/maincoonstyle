@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { getSiteData } from "@/lib/constants";
 import { Header, Footer, CallBar } from "@/components/site/Layout";
 import { CartDrawer } from "@/components/site/cart/CartDrawer";
+import { StructuredData } from "@/components/site/StructuredData";
 
 export default async function SiteLayout({
   children,
@@ -12,6 +13,7 @@ export default async function SiteLayout({
 
   return (
     <div className="flex min-h-full flex-col">
+      <StructuredData site={site} />
       <Header
         siteName={site.name}
         phoneDisplay={site.phoneDisplay}

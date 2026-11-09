@@ -3,6 +3,7 @@ import { PageHeader, Section } from "@/components/site/Section";
 
 export const metadata: Metadata = {
   title: "О нашем питомнике",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

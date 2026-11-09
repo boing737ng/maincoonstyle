@@ -23,7 +23,26 @@ export async function generateMetadata({
   const { id } = await params;
   const animal = await getPublishedAnimalById(id);
   if (!animal) return { title: "Животное не найдено" };
-  return { title: animal.name };
+  const description = [
+    animal.category === "KITTEN" ? "Котёнок" : "Мейн-кун",
+    animal.color ? `окрас ${animal.color}` : null,
+    animal.personality ? animal.personality : null,
+  ]
+    .filter(Boolean)
+    .join(". ");
+
+  return {
+    title: animal.name,
+    description: description || `Мейн-кун ${animal.name} из питомника LargeBrush Cattery.`,
+    alternates: { canonical: `/animals/${animal.id}` },
+    openGraph: {
+      title: animal.name,
+      description:
+        description || `Мейн-кун ${animal.name} из питомника LargeBrush Cattery.`,
+      type: "article",
+      images: animal.photos[0] ? [publicUrl(animal.photos[0].objectKey)] : undefined,
+    },
+  };
 }
 
 function sexLabel(sex: string | null): string {

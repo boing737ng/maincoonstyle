@@ -4,8 +4,12 @@ import { getPublishedAnimals } from "@/lib/animals";
 import { getSiteData } from "@/lib/constants";
 import { KittenGrid } from "@/components/site/AnimalGrids";
 import { Section } from "@/components/site/Section";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const HERO_IMAGE = "images/hero-largebrush.png";
 

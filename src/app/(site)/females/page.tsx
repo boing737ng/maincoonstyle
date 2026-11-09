@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { AdultCategoryPage } from "@/components/site/AdultCategoryPage";
 
-export const metadata: Metadata = { title: "Кошки" };
+export const metadata: Metadata = {
+  title: "Кошки",
+  alternates: { canonical: "/females" },
+};
 export const dynamic = "force-dynamic";
 
 export default function FemalesPage() {

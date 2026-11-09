@@ -3,6 +3,10 @@ import { LoginForm } from "@/components/admin/LoginForm";
 
 export const metadata: Metadata = {
   title: "Вход в админ-панель",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function LoginPage() {

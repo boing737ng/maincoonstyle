@@ -8,6 +8,7 @@ import { AddToCartButton } from "@/components/site/cart/AddToCartButton";
 
 export const metadata: Metadata = {
   title: "Лежанки и мебель",
+  alternates: { canonical: "/furniture" },
 };
 
 export const dynamic = "force-dynamic";
