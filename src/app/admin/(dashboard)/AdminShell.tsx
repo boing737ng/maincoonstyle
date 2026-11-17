@@ -15,7 +15,7 @@ export default async function AdminShell({
               href="/admin"
               className="text-lg font-semibold tracking-tight whitespace-nowrap"
             >
-              <span className="font-hand text-accent">LargeBrush</span> — админ-
+              <span className="font-display tracking-[0.08em] text-accent uppercase">LargeBrush</span> — админ-
               панель
             </a>
             <nav className="hidden items-center gap-4 text-sm sm:flex">

@@ -2,6 +2,7 @@ import "server-only";
 
 export type SiteData = {
   name: string;
+  contactName: string;
   phoneDisplay: string;
   phoneTel: string;
   email: string;
@@ -12,6 +13,7 @@ export type SiteData = {
 
 const siteData: SiteData = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "LargeBrush Cattery",
+  contactName: process.env.NEXT_PUBLIC_CONTACT_NAME || "Юлия",
   phoneDisplay:
     process.env.NEXT_PUBLIC_PHONE_DISPLAY || "+7 (903) 622-01-42",
   phoneTel: process.env.NEXT_PUBLIC_PHONE_TEL || "+79036220142",

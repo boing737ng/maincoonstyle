@@ -19,10 +19,13 @@ export const NAV_LINKS = [
 
 function SiteName({ siteName, className }: { siteName: string; className?: string }) {
   const [first, ...rest] = siteName.split(" ");
+  const primaryName = first
+    .replace(/([a-zа-яё])([A-ZА-ЯЁ])/g, "$1 $2")
+    .toUpperCase();
   return (
     <span className={cn("inline-flex min-w-0 max-w-full items-baseline gap-1.5 sm:gap-2", className)}>
-      <span className="shrink-0 font-hand text-[1.75rem] leading-none text-accent sm:text-[2rem]">
-        {first}
+      <span className="shrink-0 font-display text-[1.15rem] leading-none tracking-[0.05em] text-accent uppercase sm:text-[1.35rem] sm:tracking-[0.08em]">
+        {primaryName}
       </span>
       {rest.length > 0 ? (
         <span className="hidden truncate font-display text-[0.56em] uppercase tracking-[0.18em] text-foreground min-[480px]:inline sm:text-[0.62em] sm:tracking-[0.32em]">
@@ -35,10 +38,12 @@ function SiteName({ siteName, className }: { siteName: string; className?: strin
 
 export function Header({
   siteName,
+  contactName,
   phoneDisplay,
   phoneTel,
 }: {
   siteName: string;
+  contactName: string;
   phoneDisplay: string;
   phoneTel: string;
 }) {
@@ -106,7 +111,7 @@ export function Header({
           href={`tel:${phoneTel}`}
           className="hidden whitespace-nowrap text-sm font-semibold text-foreground min-[1600px]:block"
         >
-          {phoneDisplay}
+          {contactName} — {phoneDisplay}
         </a>
 
         <div className="flex shrink-0 items-center gap-2.5">
@@ -165,7 +170,7 @@ export function Header({
             href={`tel:${phoneTel}`}
             className="mt-2 px-3 py-3 text-sm font-semibold text-foreground hover:text-accent-hover"
           >
-            {phoneDisplay}
+            {contactName} — {phoneDisplay}
           </a>
         </nav>
       </div>
@@ -174,9 +179,11 @@ export function Header({
 }
 
 export function CallBar({
+  contactName,
   phoneDisplay,
   phoneTel,
 }: {
+  contactName: string;
   phoneDisplay: string;
   phoneTel: string;
 }) {
@@ -214,7 +221,7 @@ export function CallBar({
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
           </svg>
         </span>
-        <span>Позвонить: {phoneDisplay}</span>
+        <span>{contactName} — {phoneDisplay}</span>
       </a>
     </div>
   );
@@ -222,11 +229,13 @@ export function CallBar({
 
 export function Footer({
   siteName,
+  contactName,
   phoneDisplay,
   phoneTel,
   email,
 }: {
   siteName: string;
+  contactName: string;
   phoneDisplay: string;
   phoneTel: string;
   email: string;
@@ -255,13 +264,13 @@ export function Footer({
         </nav>
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-6">
           <a href={`tel:${phoneTel}`} className="hover:text-accent-hover">
-            {phoneDisplay}
+            {contactName} — {phoneDisplay}
           </a>
           <a href={`mailto:${email}`} className="hover:text-accent-hover">
             {email}
           </a>
         </div>
-        <p className="text-sm text-muted-strong">Домашний питомник мейн-кунов</p>
+        <p className="text-sm text-muted-strong">Питомник мейн-кунов драгоценных окрасов</p>
         <span className="text-xs text-muted-strong">
           © {year} {siteName}. Все права защищены.
         </span>

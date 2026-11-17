@@ -16,17 +16,19 @@ export default async function SiteLayout({
       <StructuredData site={site} />
       <Header
         siteName={site.name}
+        contactName={site.contactName}
         phoneDisplay={site.phoneDisplay}
         phoneTel={site.phoneTel}
       />
       <main className="flex-1 pb-20 sm:pb-0">{children}</main>
       <Footer
         siteName={site.name}
+        contactName={site.contactName}
         phoneDisplay={site.phoneDisplay}
         phoneTel={site.phoneTel}
         email={site.email}
       />
-      <CallBar phoneDisplay={site.phoneDisplay} phoneTel={site.phoneTel} />
+      <CallBar contactName={site.contactName} phoneDisplay={site.phoneDisplay} phoneTel={site.phoneTel} />
       <CartDrawer />
     </div>
   );

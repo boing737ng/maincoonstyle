@@ -26,8 +26,13 @@ export default function ContactsPage() {
             <span className="text-sm font-medium text-muted">
               позвонить
             </span>
-            <span className="font-display text-2xl leading-tight text-foreground transition-colors group-hover:text-amber-soft">
-              {site.phoneDisplay}
+            <span className="flex flex-col gap-1.5">
+              <span className="font-display text-2xl leading-tight text-foreground transition-colors group-hover:text-amber-soft">
+                {site.phoneDisplay}
+              </span>
+              <span className="text-sm text-muted">
+                {site.contactName}
+              </span>
             </span>
           </a>
           <a
@@ -76,9 +81,6 @@ export default function ContactsPage() {
         <p className="mt-10 max-w-xl text-lg leading-relaxed text-muted">
           Позвоните или напишите нам — с радостью ответим на все вопросы о
           наших питомцах, бронировании котят и изделиях ручной работы.
-        </p>
-        <p className="mt-4 max-w-xl font-display text-2xl leading-snug text-accent-hover">
-          звоните — мы всегда рады поговорить о котятах
         </p>
       </Section>
     </>

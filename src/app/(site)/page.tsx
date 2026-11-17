@@ -51,7 +51,11 @@ export default async function HomePage() {
         eyebrow="загляните в наш дом"
         title="Питомник изнутри"
       >
-        <CtaLinks phoneTel={site.phoneTel} phoneDisplay={site.phoneDisplay} />
+        <CtaLinks
+          contactName={site.contactName}
+          phoneTel={site.phoneTel}
+          phoneDisplay={site.phoneDisplay}
+        />
       </Section>
     </>
   );
@@ -67,56 +71,75 @@ function Hero({
   const capsName = siteName.split(" ").slice(1).join(" ") || "Cattery";
 
   return (
-    <section className="hero relative isolate overflow-hidden border-b border-border">
-      <Image
-        src={`/${HERO_IMAGE}`}
-        alt="Большой мейн-кун на побережье"
-        fill
-        priority
-        sizes="100vw"
-        className="hero-media object-cover"
-      />
-      <div className="hero-overlay absolute inset-0" aria-hidden />
-      <div className="hero-glow absolute inset-0" aria-hidden />
+    <>
+      <section className="hero relative isolate overflow-hidden border-b border-border">
+        <Image
+          src={`/${HERO_IMAGE}`}
+          alt="Большой мейн-кун на побережье"
+          fill
+          priority
+          sizes="100vw"
+          className="hero-media object-cover"
+        />
+        <div className="hero-overlay absolute inset-0" aria-hidden />
+        <div className="hero-glow absolute inset-0" aria-hidden />
 
-      <div className="container-site relative flex min-h-[32rem] items-end py-5 sm:min-h-[38rem] sm:py-8 md:min-h-[42rem] md:py-10">
-        <div className="hero-copy hero-panel w-full max-w-5xl">
-          <div className="hero-panel-main">
-            <p className="hero-kicker text-[11px] font-medium tracking-[0.25em] text-white/70 uppercase sm:text-xs sm:tracking-[0.3em]">
-              питомник кошек мейн-кун
-            </p>
-            <h1 className="hero-title mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 sm:mt-3 sm:gap-x-5">
-              <span className="hero-title-primary font-display text-4xl font-medium leading-none tracking-[0.03em] text-white sm:text-7xl md:text-8xl">
-                LARGE BRUSH
-              </span>
-              <span className="font-hand text-3xl leading-none text-[#d6b878] sm:text-5xl md:text-6xl">
-                {capsName}
-              </span>
-            </h1>
-            <p className="hero-description mt-3 max-w-xl text-sm leading-relaxed text-white/80 sm:mt-4 sm:text-lg">
-              Дом больших кошек, где каждый мейн-кун растёт рядом с людьми, в заботе,
-              спокойствии и любви.
-            </p>
-          </div>
+        <div className="container-site relative flex min-h-[32rem] items-end py-5 sm:min-h-[38rem] sm:py-8 md:min-h-[42rem] md:py-10">
+          <div className="hero-copy hero-panel w-full max-w-5xl">
+            <div className="hero-panel-main">
+              <p className="hero-kicker text-[11px] font-medium tracking-[0.25em] text-white/70 uppercase sm:text-xs sm:tracking-[0.3em]">
+                питомник кошек мейн-кун
+              </p>
+              <h1 className="hero-title mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 sm:mt-3 sm:gap-x-5">
+                <span className="hero-title-primary font-display text-4xl font-medium leading-none tracking-[0.03em] text-white sm:text-7xl md:text-8xl">
+                  LARGE BRUSH
+                </span>
+                <span className="font-hand text-3xl leading-none text-[#d6b878] sm:text-5xl md:text-6xl">
+                  {capsName}
+                </span>
+              </h1>
+              <p className="hero-description mt-3 max-w-xl text-sm leading-relaxed text-white/80 sm:mt-4 sm:text-lg">
+                Дом больших кошек, где каждый мейн-кун растёт рядом с людьми, в заботе,
+                спокойствии и любви.
+              </p>
+            </div>
 
-          <div className="hero-panel-actions mt-5 flex flex-col gap-2.5 sm:mt-6 sm:flex-row sm:gap-3 md:mt-0">
-            <Link href="/kittens" className="btn btn-solid">
-              Смотреть котят
-            </Link>
-            <a href={`tel:${phoneTel}`} className="btn btn-ghost">
-              Связаться с нами
-            </a>
+            <div className="hero-panel-actions mt-5 hidden gap-2.5 sm:mt-6 md:mt-0 md:flex md:gap-3">
+              <HeroActions phoneTel={phoneTel} />
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* На узких экранах кнопки уходят из фото в отдельную полосу под ним. */}
+      <div className="hero-actions-bar md:hidden">
+        <div className="container-site hero-actions-bar-inner">
+          <HeroActions phoneTel={phoneTel} />
+        </div>
       </div>
-    </section>
+    </>
+  );
+}
+
+function HeroActions({ phoneTel }: { phoneTel: string }) {
+  return (
+    <>
+      <Link href="/kittens" className="btn btn-solid">
+        Смотреть котят
+      </Link>
+      <a href={`tel:${phoneTel}`} className="btn btn-ghost">
+        Связаться с нами
+      </a>
+    </>
   );
 }
 
 function CtaLinks({
+  contactName,
   phoneTel,
   phoneDisplay,
 }: {
+  contactName: string;
   phoneTel: string;
   phoneDisplay: string;
 }) {
@@ -148,7 +171,7 @@ function CtaLinks({
           href={`tel:${phoneTel}`}
           className="font-semibold text-amber hover:text-amber-soft"
         >
-          {phoneDisplay}
+          {contactName} — {phoneDisplay}
         </a>
       </p>
     </div>
